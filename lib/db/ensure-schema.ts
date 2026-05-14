@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db/prisma";
+﻿import { prisma } from "@/lib/db/prisma";
 import { getServerEnv } from "@/lib/config/server-env";
 
 let ensurePromise: Promise<void> | null = null;
@@ -49,12 +49,12 @@ async function applySchema() {
       "employmentType" TEXT,
       "seniority" TEXT,
       "description" TEXT NOT NULL,
-      "requiredSkills" JSON NOT NULL,
-      "preferredSkills" JSON NOT NULL,
+      "requiredSkills" JSONB NOT NULL,
+      "preferredSkills" JSONB NOT NULL,
       "minExperience" INTEGER NOT NULL DEFAULT 0,
       "maxExperience" INTEGER,
       "status" TEXT NOT NULL DEFAULT 'DRAFT',
-      "scoringConfig" JSON,
+      "scoringConfig" JSONB,
       "createdById" TEXT NOT NULL,
       "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -77,16 +77,16 @@ async function applySchema() {
       "source" TEXT NOT NULL DEFAULT 'RESUME_UPLOAD',
       "resumeUrl" TEXT,
       "parsedResumeText" TEXT NOT NULL,
-      "linkedInJson" JSON,
-      "tags" JSON NOT NULL,
-      "skills" JSON NOT NULL,
-      "education" JSON NOT NULL,
-      "certifications" JSON NOT NULL,
-      "projects" JSON NOT NULL,
-      "workExperience" JSON NOT NULL,
-      "communicationIndicators" JSON NOT NULL,
-      "sensitiveInfoWarnings" JSON NOT NULL,
-      "embedding" JSON,
+      "linkedInJson" JSONB,
+      "tags" JSONB NOT NULL,
+      "skills" JSONB NOT NULL,
+      "education" JSONB NOT NULL,
+      "certifications" JSONB NOT NULL,
+      "projects" JSONB NOT NULL,
+      "workExperience" JSONB NOT NULL,
+      "communicationIndicators" JSONB NOT NULL,
+      "sensitiveInfoWarnings" JSONB NOT NULL,
+      "embedding" JSONB,
       "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE
@@ -112,9 +112,9 @@ async function applySchema() {
       "confidenceScore" REAL NOT NULL,
       "scoringVersion" TEXT NOT NULL DEFAULT 'v2.0.0',
       "recommendation" TEXT NOT NULL,
-      "explanationJson" JSON NOT NULL,
-      "evidenceJson" JSON NOT NULL,
-      "riskFlagsJson" JSON NOT NULL,
+      "explanationJson" JSONB NOT NULL,
+      "evidenceJson" JSONB NOT NULL,
+      "riskFlagsJson" JSONB NOT NULL,
       "status" TEXT NOT NULL DEFAULT 'NEW',
       "assignedHiringManagerId" TEXT,
       "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -151,8 +151,8 @@ async function applySchema() {
       "action" TEXT NOT NULL,
       "entityType" TEXT NOT NULL,
       "entityId" TEXT NOT NULL,
-      "oldValueJson" JSON,
-      "newValueJson" JSON,
+      "oldValueJson" JSONB,
+      "newValueJson" JSONB,
       "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE,
       FOREIGN KEY ("actorId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE
@@ -166,7 +166,7 @@ async function applySchema() {
       "generatedById" TEXT NOT NULL,
       "reportType" TEXT NOT NULL,
       "fileUrl" TEXT,
-      "generatedJson" JSON,
+      "generatedJson" JSONB,
       "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY ("jobId") REFERENCES "JobRequisition"("id") ON DELETE CASCADE ON UPDATE CASCADE,
       FOREIGN KEY ("generatedById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE
@@ -177,11 +177,11 @@ async function applySchema() {
     CREATE TABLE IF NOT EXISTS "OrganizationSetting" (
       "id" TEXT NOT NULL PRIMARY KEY,
       "organizationId" TEXT NOT NULL,
-      "defaultWeights" JSON NOT NULL,
+      "defaultWeights" JSONB NOT NULL,
       "minimumScoreThreshold" INTEGER NOT NULL DEFAULT 70,
-      "knockoutCriteria" JSON,
+      "knockoutCriteria" JSONB,
       "aiEnhancementEnabled" BOOLEAN NOT NULL DEFAULT 0,
-      "reportBranding" JSON,
+      "reportBranding" JSONB,
       "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE
@@ -198,7 +198,7 @@ async function applySchema() {
       "organizationId" TEXT NOT NULL,
       "provider" TEXT NOT NULL,
       "status" TEXT NOT NULL DEFAULT 'DISCONNECTED',
-      "configJson" JSON,
+      "configJson" JSONB,
       "lastSyncAt" DATETIME,
       "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -215,7 +215,7 @@ async function applySchema() {
       "id" TEXT NOT NULL PRIMARY KEY,
       "organizationId" TEXT NOT NULL,
       "provider" TEXT NOT NULL,
-      "payloadJson" JSON NOT NULL,
+      "payloadJson" JSONB NOT NULL,
       "processed" BOOLEAN NOT NULL DEFAULT 0,
       "errorMessage" TEXT,
       "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -235,3 +235,4 @@ export async function ensureDatabaseSchema() {
 
   await ensurePromise;
 }
+

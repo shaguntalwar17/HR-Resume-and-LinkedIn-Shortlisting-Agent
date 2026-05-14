@@ -1,4 +1,10 @@
-# HireWise AI - HR Shortlisting Platform
+# HireWise AI Resume & LinkedIn Shortlisting Agent
+
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma)](https://www.prisma.io/)
+[![Status](https://img.shields.io/badge/Build-Passing-22c55e)](#lint-and-build)
+[![License](https://img.shields.io/badge/License-MIT-blue)](#)
 
 HireWise AI is a production-style HR shortlisting system for recruiters, hiring managers, and talent acquisition teams.  
 It parses job descriptions and resumes, evaluates fit with transparent scoring, supports human override workflows, and produces auditable reports.
@@ -33,6 +39,33 @@ This platform is designed to reduce manual screening fatigue while keeping human
 - Recharts analytics
 - `pdf-parse`, `mammoth`, `pdf-lib`
 - Optional AI provider abstraction
+
+## Folder Structure
+```text
+app/
+  api/
+  dashboard/
+  jobs/
+  candidates/
+  evaluations/
+  reports/
+  analytics/
+components/
+  layout/
+  evaluations/
+  ui/
+lib/
+  auth/
+  db/
+  parsers/
+  scoring/
+  reporting/
+  security/
+  validation/
+prisma/
+docs/
+public/
+```
 
 ## Architecture
 ```mermaid
@@ -94,7 +127,7 @@ Why not Vercel-only with local SQLite:
 - Vercel serverless filesystem is ephemeral and not reliable for SQLite writes.  
 Reference: Vercel docs on SQLite support.
 
-## Local Development
+## Local Setup
 ```bash
 npm install
 npm run dev
