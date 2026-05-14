@@ -1,82 +1,75 @@
-# HireWise AI — Resume & LinkedIn Shortlisting Agent
+# HireWise AI - HR Shortlisting Platform
 
-Production-quality HR-tech AI assistant for JD-to-candidate screening with transparent scoring, ranked shortlists, human override auditability, and downloadable reports.
+HireWise AI is a production-style HR shortlisting system for recruiters, hiring managers, and talent acquisition teams.  
+It parses job descriptions and resumes, evaluates fit with transparent scoring, supports human override workflows, and produces auditable reports.
 
-## Problem Statement
-Recruiters screen high volumes of resumes under time pressure, which creates:
-- inconsistent evaluation criteria,
-- missed strong candidates,
-- fatigue and decision drift,
-- bias risk when unstructured profiles are reviewed manually.
+## Product Overview
+This platform is designed to reduce manual screening fatigue while keeping humans in control:
+- Structured JD parsing and candidate ingestion
+- Role-based recruiter workflows
+- Explainable candidate scoring and ranking
+- Review, override, note-taking, and audit logs
+- Downloadable hiring reports (JSON/HTML/PDF)
+- Responsible AI guardrails for fairness and traceability
 
-## Solution Overview
-HireWise AI ingests a Job Description plus multiple resumes/LinkedIn JSON profiles, parses them into structured data, scores candidates using a transparent mandatory rubric, and presents a ranked shortlist with explanations and recruiter override controls.
-
-It is explicitly decision-support, not autonomous hiring.
-
-## Core Features
-- JD parser (text/file) with structured extraction
-- Resume ingestion (PDF/DOCX/TXT) + LinkedIn JSON input
-- Semantic-like matching + deterministic fallback engine
-- Mandatory weighted rubric with dimension-level scoring
-- Ranked shortlist dashboard with filters/search
-- Candidate detail panel with explainability
-- Human override + recruiter notes + full audit trail
-- Report export: JSON, HTML, PDF
-- Demo mode (instant preloaded JD + 7 candidates)
-- Analytics dashboard (distribution, gaps, comparisons)
-- Bias-aware warning system (sensitive attributes ignored in scoring)
-- Configurable weights with mandatory default baseline
-
-## Screenshots
-- `docs/screenshots/landing.png` (placeholder)
-- `docs/screenshots/workspace.png` (placeholder)
-- `docs/screenshots/candidate-detail.png` (placeholder)
-- `docs/screenshots/analytics.png` (placeholder)
-- `docs/screenshots/reports.png` (placeholder)
+## Key Features
+- Authentication and protected routes
+- Multi-role access model: `ADMIN`, `RECRUITER`, `HIRING_MANAGER`, `VIEWER`
+- Organization-scoped data model and APIs
+- Job requisition management
+- Candidate upload (PDF/DOCX/TXT) + LinkedIn JSON enrichment
+- Deterministic scoring engine + optional semantic enhancement
+- Candidate pipeline statuses and bulk actions
+- Recruiter reviews, score overrides, and full audit history
+- Analytics dashboards and skill-gap visibility
+- ATS integration-ready webhook architecture
+- Health endpoint and production security hardening
 
 ## Tech Stack
-- Frontend: Next.js (App Router), TypeScript, Tailwind CSS, Framer Motion, Recharts, Lucide
-- Backend: Next.js API routes (Node runtime), Zod validation
-- Parsing: `pdf-parse`, `mammoth`
-- Scoring: deterministic weighted engine + pluggable AI enhancement
-- Persistence: local JSON + in-memory fallback (Supabase-ready adapter path)
-- Reporting: HTML/JSON generators + server-side PDF via `pdf-lib`
+- Next.js 16 App Router + TypeScript
+- Tailwind CSS + reusable UI components
+- Prisma ORM + SQLite (current persistence engine)
+- Zod validation, React Hook Form
+- Recharts analytics
+- `pdf-parse`, `mammoth`, `pdf-lib`
+- Optional AI provider abstraction
 
-## Architecture Diagram
+## Architecture
 ```mermaid
 flowchart LR
-  U[Recruiter UI] --> W[Workspace / Dashboard]
-  W --> API[Next.js API Routes]
-  API --> P1[JD Parser]
-  API --> P2[Resume + LinkedIn Parser]
-  API --> S[Scoring Engine]
-  S --> A[Optional AI Enhancer]
-  A --> S
-  S --> ST[Session Store]
-  ST --> R[Report Generator]
-  ST --> AN[Analytics Builder]
-  R --> U
-  AN --> U
+  UI[Web App UI] --> Proxy[Next.js Proxy auth gate]
+  Proxy --> API[Route Handlers / API]
+  API --> PARSERS[JD + Resume Parsers]
+  API --> SCORE[Scoring + Semantic Matching]
+  API --> REPORTS[Report Generation]
+  API --> AUDIT[Audit Logging]
+  API --> DB[(Prisma Database)]
+  API --> STORAGE[(Resume Storage)]
 ```
 
-## Agent Flow Diagram
+## Agent Workflow
 ```mermaid
 flowchart TD
-  JD[Input JD] --> JDP[Parse JD]
-  CAND[Upload Resumes / LinkedIn JSON] --> CP[Parse Candidate Profiles]
-  JDP --> EVAL[Run Rubric Evaluation]
-  CP --> EVAL
-  EVAL --> RANK[Rank Candidates]
-  RANK --> DETAIL[Candidate Detail Explainability]
-  DETAIL --> OVR[Manual Override + Reason]
-  OVR --> AUDIT[Audit Log]
-  AUDIT --> REP[Export Reports JSON/HTML/PDF]
+  A[Recruiter login] --> B[Create/select job requisition]
+  B --> C[Upload resumes + LinkedIn JSON]
+  C --> D[Parse and structure candidate profiles]
+  D --> E[Run candidate-job evaluation]
+  E --> F[Ranked shortlist + explainability]
+  F --> G[Recruiter review: shortlist/reject/hold]
+  G --> H[Hiring manager review + comments]
+  H --> I[Export reports + audit trail]
 ```
 
 ## Scoring Methodology
+Mandatory rubric:
+- Skills Match: 30%
+- Experience Relevance: 25%
+- Education and Certifications: 15%
+- Project and Portfolio: 20%
+- Communication Quality: 10%
+
 Formula:
-```
+```text
 total_score =
 (skills_match_score * 0.30 +
  experience_relevance_score * 0.25 +
@@ -86,102 +79,78 @@ total_score =
 ```
 
 Recommendation thresholds:
-- 85-100: Strong Shortlist
-- 70-84: Shortlist
-- 55-69: Review Manually
-- <55: Not Recommended
+- 85-100: `STRONG_SHORTLIST`
+- 70-84: `SHORTLIST`
+- 55-69: `HOLD` / manual review
+- <55: `REJECT`
 
-Detailed rubric: `docs/scoring-methodology.md`
+## Real-World Deployment Decision
+For this codebase **today**, the safest production path is:
+1. Deploy as a containerized Next.js service on a platform with persistent disk support (for SQLite durability) such as Railway/Render/Fly.
+2. Keep uploads in persistent volume or configure `@vercel/blob` for managed object storage.
+3. Disable demo mode in production and enforce webhook secrets + rate limits.
 
-## Project Structure
-```text
-app/
-  page.tsx
-  workspace/page.tsx
-  reports/page.tsx
-  methodology/page.tsx
-  api/*
-components/
-  ui/*
-  dashboard/*
-  candidate/*
-  reports/*
-  layout/*
-lib/
-  parsers/*
-  scoring/*
-  ai/*
-  reporting/*
-  types/*
-  demo-data/*
-  utils/*
-  store/*
-public/sample-data/*
-docs/
-  architecture.md
-  scoring-methodology.md
-  deployment-guide.md
-```
+Why not Vercel-only with local SQLite:
+- Vercel serverless filesystem is ephemeral and not reliable for SQLite writes.  
+Reference: Vercel docs on SQLite support.
 
-## Run Locally
+## Local Development
 ```bash
 npm install
 npm run dev
 ```
-Visit `http://localhost:3000`
+Open `http://localhost:3000`.
 
-## Build & Lint
+Demo credentials (when demo mode is enabled):
+- `admin@hirewise.demo` / `DemoPass#123`
+- `recruiter@hirewise.demo` / `DemoPass#123`
+- `manager@hirewise.demo` / `DemoPass#123`
+- `viewer@hirewise.demo` / `DemoPass#123`
+
+## Lint and Build
 ```bash
 npm run lint
 npm run build
 ```
 
 ## Environment Variables
-See `.env.example`
+Copy `.env.example` to `.env.local` and configure:
+- `AUTH_SECRET`
+- `DATABASE_URL`
+- `ENABLE_DEMO_MODE`
+- `NEXT_PUBLIC_DEMO_MODE`
+- `AUTO_BOOTSTRAP_SCHEMA`
+- Storage, webhook, and AI variables as needed
 
-Optional AI enhancement:
-- `OPENAI_API_KEY` or `AI_API_KEY`
-- `AI_MODEL`
-- `AI_BASE_URL`
-
-If no API key is configured, deterministic mode is used automatically.
-
-## Demo Instructions
-1. Open `/workspace`
-2. Click `Try Demo Data`
-3. Inspect ranked shortlist
-4. Open candidate detail, review explanations
-5. Apply override with reason
-6. Export JSON/HTML/PDF from `/reports`
-
-## Vercel Deployment
-1. Push code to GitHub
-2. Import repo in Vercel
-3. Add optional env vars
-4. Deploy
-
-Detailed guide: `docs/deployment-guide.md`
-
-## Responsible AI Disclaimer
-- Sensitive attributes are ignored in score calculations.
-- Tool provides recommendations, not hiring decisions.
-- Human recruiter judgment is required before final action.
-- Override logs are retained for auditability and transparency.
-
-## Future Enhancements
-- Supabase/Postgres production persistence adapter
-- Multi-tenant recruiter auth and role-based access
-- Advanced skill ontology + embedding index
-- Interview question generation by candidate gap profile
-- Slack/ATS integration and webhook automation
-
-## GitHub + Vercel Quick Commands
+## Docker Deployment
 ```bash
-git init
-git add .
-git commit -m "feat: initial hirewise ai implementation"
-
-git remote add origin https://github.com/<username>/hirewise-ai-shortlisting-agent.git
-git branch -M main
-git push -u origin main
+docker compose up --build
 ```
+This uses persistent volumes for DB and uploads.
+
+## Vercel Notes
+Vercel is suitable for demo UI and stateless workloads, but SQLite persistence is not production-safe on serverless storage.  
+If you need Vercel production, migrate DB to managed Postgres and update Prisma datasource/provider accordingly.
+
+## Responsible AI
+- Sensitive/protected attributes are ignored for scoring
+- System assists hiring decisions, it does not automate final hiring
+- Human review is required before final disposition
+- All material overrides are logged for auditability
+
+## Docs
+- [Architecture](docs/architecture.md)
+- [Scoring Methodology](docs/scoring-methodology.md)
+- [Deployment Guide](docs/deployment-guide.md)
+
+## Screenshots Placeholder
+- `docs/screenshots/landing.png`
+- `docs/screenshots/dashboard.png`
+- `docs/screenshots/evaluations.png`
+- `docs/screenshots/reports.png`
+
+## Roadmap
+- Managed PostgreSQL default + migration workflow
+- SSO/SAML and enterprise identity integration
+- Advanced ATS sync (Greenhouse, Lever, Workday, BambooHR)
+- Deletion/anonymization workflows for privacy compliance

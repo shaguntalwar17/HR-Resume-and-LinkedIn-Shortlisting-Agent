@@ -1,0 +1,272 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  RECRUITER
+  HIRING_MANAGER
+  VIEWER
+}
+
+enum JobStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+  ARCHIVED
+}
+
+enum CandidateSource {
+  RESUME_UPLOAD
+  LINKEDIN_JSON
+  ATS_IMPORT
+  REFERRAL
+  DEMO
+}
+
+enum ApplicationRecommendation {
+  STRONG_SHORTLIST
+  SHORTLIST
+  HOLD
+  REJECT
+}
+
+enum ApplicationStatus {
+  NEW
+  PARSED
+  EVALUATED
+  REVIEWED
+  SHORTLISTED
+  REJECTED
+  HOLD
+  HIRED
+}
+
+enum ReviewDecision {
+  SHORTLIST
+  REJECT
+  HOLD
+  APPROVE
+  COMMENT
+}
+
+enum ReportType {
+  JSON
+  HTML
+  PDF
+  EXECUTIVE_SUMMARY
+}
+
+enum IntegrationProvider {
+  GREENHOUSE
+  LEVER
+  WORKDAY
+  BAMBOOHR
+  GENERIC_WEBHOOK
+}
+
+enum IntegrationStatus {
+  DISCONNECTED
+  CONNECTED
+  ERROR
+}
+
+model Organization {
+  id           String              @id @default(cuid())
+  name         String
+  industry     String?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  users        User[]
+  jobs         JobRequisition[]
+  candidates   Candidate[]
+  auditLogs    AuditLog[]
+  settings     OrganizationSetting?
+  integrations IntegrationConfig[]
+  webhookLogs  WebhookIngestionLog[]
+}
+
+model User {
+  id                    String                  @id @default(cuid())
+  name                  String
+  email                 String                  @unique
+  passwordHash          String
+  role                  UserRole
+  organizationId        String
+  organization          Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  createdJobs           JobRequisition[]        @relation("JobCreatedBy")
+  reviews               RecruiterReview[]
+  auditLogs             AuditLog[]              @relation("AuditActor")
+  generatedReports      Report[]
+  assignedApplications  ApplicationEvaluation[] @relation("ApplicationAssignee")
+}
+
+model JobRequisition {
+  id              String                  @id @default(cuid())
+  organizationId  String
+  organization    Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  title           String
+  department      String?
+  location        String?
+  employmentType  String?
+  seniority       String?
+  description     String
+  requiredSkills  Json
+  preferredSkills Json
+  minExperience   Int                     @default(0)
+  maxExperience   Int?
+  status          JobStatus               @default(DRAFT)
+  scoringConfig   Json?
+  createdById     String
+  createdBy       User                    @relation("JobCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  applications    ApplicationEvaluation[]
+  reports         Report[]
+}
+
+model Candidate {
+  id                       String                  @id @default(cuid())
+  organizationId           String
+  organization             Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  fullName                 String
+  email                    String?
+  phone                    String?
+  location                 String?
+  currentTitle             String?
+  currentCompany           String?
+  experienceYears          Float                   @default(0)
+  source                   CandidateSource         @default(RESUME_UPLOAD)
+  resumeUrl                String?
+  parsedResumeText         String
+  linkedInJson             Json?
+  tags                     Json
+  skills                   Json
+  education                Json
+  certifications           Json
+  projects                 Json
+  workExperience           Json
+  communicationIndicators  Json
+  sensitiveInfoWarnings    Json
+  embedding                Json?
+  createdAt                DateTime                @default(now())
+  updatedAt                DateTime                @updatedAt
+  applications             ApplicationEvaluation[]
+}
+
+model ApplicationEvaluation {
+  id                      String                    @id @default(cuid())
+  jobId                   String
+  job                     JobRequisition            @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  candidateId             String
+  candidate               Candidate                 @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  overallScore            Float
+  skillsScore             Float
+  experienceScore         Float
+  educationScore          Float
+  domainScore             Float
+  communicationScore      Float
+  cultureFitScore         Float?
+  mandatorySkillsScore    Float
+  preferredSkillsScore    Float
+  projectScore            Float
+  semanticScore           Float?
+  confidenceScore         Float
+  scoringVersion          String                    @default("v2.0.0")
+  recommendation          ApplicationRecommendation
+  explanationJson         Json
+  evidenceJson            Json
+  riskFlagsJson           Json
+  status                  ApplicationStatus         @default(NEW)
+  assignedHiringManagerId String?
+  assignedHiringManager   User?                     @relation("ApplicationAssignee", fields: [assignedHiringManagerId], references: [id], onDelete: SetNull)
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  reviews                 RecruiterReview[]
+
+  @@unique([jobId, candidateId])
+}
+
+model RecruiterReview {
+  id             String                @id @default(cuid())
+  applicationId  String
+  application    ApplicationEvaluation @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  reviewerId     String
+  reviewer       User                  @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
+  decision       ReviewDecision
+  notes          String?
+  overrideReason String?
+  createdAt      DateTime              @default(now())
+}
+
+model AuditLog {
+  id             String        @id @default(cuid())
+  organizationId String
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actorId        String?
+  actor          User?         @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  action         String
+  entityType     String
+  entityId       String
+  oldValueJson   Json?
+  newValueJson   Json?
+  createdAt      DateTime      @default(now())
+}
+
+model Report {
+  id            String        @id @default(cuid())
+  jobId         String
+  job           JobRequisition @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  generatedById String
+  generatedBy   User          @relation(fields: [generatedById], references: [id], onDelete: Restrict)
+  reportType    ReportType
+  fileUrl       String?
+  generatedJson Json?
+  createdAt     DateTime      @default(now())
+}
+
+model OrganizationSetting {
+  id                    String       @id @default(cuid())
+  organizationId        String       @unique
+  organization          Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  defaultWeights        Json
+  minimumScoreThreshold Int          @default(70)
+  knockoutCriteria      Json?
+  aiEnhancementEnabled  Boolean      @default(false)
+  reportBranding        Json?
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+}
+
+model IntegrationConfig {
+  id             String              @id @default(cuid())
+  organizationId String
+  organization   Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  provider       IntegrationProvider
+  status         IntegrationStatus   @default(DISCONNECTED)
+  configJson     Json?
+  lastSyncAt     DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@unique([organizationId, provider])
+}
+
+model WebhookIngestionLog {
+  id             String              @id @default(cuid())
+  organizationId String
+  organization   Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  provider       IntegrationProvider
+  payloadJson    Json
+  processed      Boolean             @default(false)
+  errorMessage   String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+}

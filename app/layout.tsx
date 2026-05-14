@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Manrope, Space_Grotesk } from "next/font/google";
 import { Toaster } from "sonner";
 
-import { SiteShell } from "@/components/layout/site-shell";
+import { RootShell } from "@/components/layout/root-shell";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -16,9 +16,9 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "HireWise AI — Resume & LinkedIn Shortlisting Agent",
+  title: "HireWise AI - Production HR Shortlisting Platform",
   description:
-    "Production-grade HR-tech AI shortlisting assistant with transparent scoring, analytics, and human override audit trail.",
+    "Enterprise hiring intelligence platform with AI-assisted evaluation, shortlist workflows, auditability, and responsible AI guardrails.",
 };
 
 export default function RootLayout({
@@ -27,12 +27,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${manrope.variable} ${spaceGrotesk.variable} h-full antialiased`}
-    >
+    <html lang="en" className={`${manrope.variable} ${spaceGrotesk.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <SiteShell>{children}</SiteShell>
+        <RootShell>{children}</RootShell>
         <Toaster richColors closeButton position="top-right" />
       </body>
     </html>

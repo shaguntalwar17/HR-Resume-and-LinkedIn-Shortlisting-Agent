@@ -1,137 +1,82 @@
 # HireWise AI Architecture
 
-## 1) System Overview
-HireWise AI is a full-stack Next.js application that supports HR teams in resume and LinkedIn shortlisting through:
-- deterministic parsing + scoring fallback (no API keys required),
-- optional LLM-enhanced justifications,
-- ranked recommendations,
-- human override audit trail,
-- downloadable reports.
+## 1. System Context
+HireWise AI is a Next.js 16 full-stack product that supports recruiter workflows from JD intake through candidate ranking, manual review, and report export.
 
-The app is optimized for Vercel deployment and demo-readiness.
+Core goals:
+- standardize candidate screening,
+- preserve human control,
+- maintain explainability and auditability.
 
-## 2) Frontend Architecture
-- Framework: Next.js App Router + TypeScript.
-- UI: Tailwind CSS + reusable component primitives (`components/ui`).
-- UX flow:
-  1. JD ingestion/parsing
-  2. Candidate ingestion/parsing
-  3. Evaluation run
-  4. Ranking + detail explainability + overrides
-  5. Analytics + report exports
-- Key pages:
-  - `/`: landing/product overview
-  - `/workspace`: end-to-end evaluation console
-  - `/reports`: export center
-  - `/methodology`: rubric + responsible AI explanation
+## 2. Application Layers
 
-## 3) Backend/API Architecture
-All backend logic is implemented through Next.js route handlers (`app/api/**`) with Node runtime.
+### Frontend
+- App Router pages for dashboard, jobs, candidates, evaluations, shortlist, reports, analytics, settings, and responsible AI.
+- Protected layout shell with left navigation and role-aware access.
+- Responsive enterprise dashboard UI with cards, tables, and charts.
 
-Core endpoints:
-- `POST /api/jd/parse`: parses JD text/file into structured requirements.
-- `POST /api/candidates/parse`: parses resume files (PDF/DOCX/TXT) + LinkedIn JSON.
-- `POST /api/evaluate`: computes weighted scores, ranking, and optional AI enhancement.
-- `POST /api/override`: applies recruiter override with full audit logging.
-- `POST /api/notes`: stores recruiter notes for candidates.
-- `POST /api/demo`: loads prebuilt demo dataset instantly.
-- `GET /api/reports/{json|html|pdf}`: downloadable report generation.
-- `GET /api/runs`: fetches recent runs/history.
+### Access Control
+- JWT session cookie auth.
+- Role-based authorization in API guards:
+  - `ADMIN`
+  - `RECRUITER`
+  - `HIRING_MANAGER`
+  - `VIEWER`
+- Request pre-routing guard via `proxy.ts`.
 
-## 4) Parsing Pipeline
-### JD parsing
-- Inputs: plain text and/or uploaded JD file.
-- Extracts:
-  - role title
-  - required/preferred skills
-  - minimum experience
-  - domain/industry
-  - education requirements
-  - certifications
-  - responsibilities
-  - nice-to-have qualifications
+### API Layer
+- Node runtime route handlers under `app/api/**`.
+- Zod request validation.
+- Audit logging for critical workflow actions.
+- New health endpoint: `GET /api/health`.
+- Rate limits on sensitive endpoints (login and inbound webhooks).
 
-### Candidate parsing
-- Resume files: parsed by extension
-  - PDF: `pdf-parse`
-  - DOCX: `mammoth`
-  - TXT: UTF-8 text
-- LinkedIn: manual JSON payload parsing.
-- Candidate profile extraction includes:
-  - identity/contact fields
-  - role/experience
-  - skills/tools
-  - education/certs
-  - projects/work experience
-  - communication indicators
-  - sensitive-attribute warning signals
+### Domain Services
+- `lib/parsers/*`: JD and candidate extraction from files/JSON.
+- `lib/scoring/*`: deterministic scoring + optional semantic signal.
+- `lib/reporting/*`: JSON/HTML/PDF generation.
+- `lib/audit/*`: append-only audit records.
 
-## 5) Scoring Pipeline
-The scoring engine computes all mandatory dimensions with explicit weights:
-- Skills Match: 30%
-- Experience Relevance: 25%
-- Education & Certs: 15%
-- Project / Portfolio: 20%
-- Communication Quality: 10%
+### Data Layer
+- Prisma models for organization, users, jobs, candidates, evaluations, reviews, reports, settings, integrations, and webhook logs.
+- Current runtime uses SQLite-backed Prisma.
+- Development fallback bootstrap is enabled through `ensure-schema` for environments where Prisma push is unavailable.
 
-Computation:
-`total_score = (Σ raw_dimension_score * weight) * 10`
+## 3. Candidate Evaluation Pipeline
+1. Recruiter creates/selects job requisition.
+2. JD is parsed into structured requirements.
+3. Resumes and LinkedIn JSON are ingested and normalized.
+4. Candidate profile is scored against job criteria.
+5. Explanations, evidence snippets, and risk flags are generated.
+6. Recruiter or hiring manager updates status/recommendation and may override with reason.
+7. Audit logs and reports preserve decision traceability.
 
-Each dimension returns:
-- raw score out of 10
-- weighted contribution
-- one-line justification
-- evidence snippet(s)
+## 4. Responsible AI Controls
+- Protected attributes are not used in scoring logic.
+- Sensitive attributes detected in resume text are flagged as ignored.
+- Human review remains mandatory before final hiring status transitions.
+- Overrides require reason text and become part of the immutable review trail.
 
-Outputs:
-- total score out of 100
-- recommendation band
-- confidence level
-- key strengths/gaps
-- risk flags
+## 5. Deployment Architecture Decision
+Given the current SQLite persistence model, the recommended real-world deployment is:
+- containerized deployment on a platform with persistent volumes (Railway, Render, Fly),
+- encrypted storage for DB and uploads,
+- demo mode disabled in production,
+- webhook secret and rate limiting enabled.
 
-## 6) AI Layer
-`lib/ai/provider.ts` provides a pluggable enhancement layer.
-- Default mode: deterministic engine (always available).
-- Optional mode: OpenAI-compatible chat completion via env variables.
-- AI enhancement only refines justifications/confidence/summary; deterministic scoring remains robust fallback.
+This avoids ephemeral-storage failure modes from serverless-only SQLite deployments.
 
-## 7) Audit & Persistence
-- Current persistence: JSON-file + in-memory fallback (`lib/store/session-store.ts`).
-- Stored entities:
-  - evaluation runs
-  - candidates
-  - scores
-  - override history
-  - recruiter notes
-- Designed to be replaceable with Supabase/Postgres adapter later.
+## 6. Production Hardening Implemented
+- `proxy.ts` route protection
+- security headers and CSP in `next.config.ts`
+- `GET /api/health` service checks
+- env validation with production-safe defaults (`lib/config/server-env.ts`)
+- rate limiting helper (`lib/security/rate-limit.ts`)
+- demo mode hard gate for demo bootstrap APIs
+- optional managed file storage support via `@vercel/blob`
 
-## 8) Reporting Pipeline
-Generated report formats:
-- JSON: full machine-readable artifact
-- HTML: narrative report with ranking and candidate breakdown
-- PDF: lightweight printable summary generated server-side (`pdf-lib`)
-
-Report sections:
-- JD summary
-- evaluation methodology
-- ranked shortlist table
-- candidate-level breakdown
-- override logs
-- responsible AI disclaimer
-
-## 9) Analytics Pipeline
-Dashboard metrics built from evaluation outputs:
-- total candidates
-- average score
-- top candidate
-- recommendation breakdown
-- score distribution
-- skill-gap distribution
-- most common missing skills
-- candidate comparison dimensions
-
-## 10) Deployment Notes
-- Vercel-compatible runtime and packages.
-- Works without any secret keys (demo + deterministic scoring).
-- AI key adds enhancement quality but is optional.
+## 7. Future Architecture Upgrades
+- Move persistence default to managed PostgreSQL.
+- Add tenant-aware row-level security (RLS) and stricter data retention controls.
+- Introduce background job queue for heavy parsing/report tasks.
+- Add SIEM integration for enterprise compliance telemetry.

@@ -1,0 +1,25 @@
+services:
+  hirewise:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: hirewise-ai-shortlisting-agent:latest
+    ports:
+      - "3000:3000"
+    environment:
+      APP_URL: http://localhost:3000
+      AUTH_SECRET: change-this-secret-before-production
+      DATABASE_URL: file:./data/hirewise.db
+      ENABLE_DEMO_MODE: "false"
+      NEXT_PUBLIC_DEMO_MODE: "false"
+      AUTO_BOOTSTRAP_SCHEMA: "true"
+      RESUME_STORAGE_PROVIDER: local
+      MAX_RESUME_FILE_MB: "8"
+    volumes:
+      - hirewise_data:/app/data
+      - hirewise_uploads:/app/public/uploads
+    restart: unless-stopped
+
+volumes:
+  hirewise_data:
+  hirewise_uploads:
