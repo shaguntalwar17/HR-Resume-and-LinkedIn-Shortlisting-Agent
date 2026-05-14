@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Aisha Rao",
+    "profile_summary": "Excellent fit: strong full-stack AI background, recruiter domain exposure, and certifications.",
+    "quality_bucket": "excellent_skills"
+  },
+  {
+    "name": "Michael Chen",
+    "profile_summary": "Strong backend and cloud experience; missing direct LLM product depth.",
+    "quality_bucket": "good_experience_missing_skills"
+  },
+  {
+    "name": "Priya Nair",
+    "profile_summary": "Fresher profile with strong project portfolio and promising AI fundamentals.",
+    "quality_bucket": "fresher_with_projects"
+  },
+  {
+    "name": "Rohit Verma",
+    "profile_summary": "Weak fit for the target role due to limited relevant experience and skills.",
+    "quality_bucket": "weak_candidate"
+  },
+  {
+    "name": "Sarah Kim",
+    "profile_summary": "Adjacent-domain candidate from FinTech with transferrable skills.",
+    "quality_bucket": "adjacent_domain"
+  }
+]

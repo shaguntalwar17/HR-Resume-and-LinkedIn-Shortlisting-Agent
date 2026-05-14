@@ -1,0 +1,54 @@
+{
+  "name": "Alex Martin",
+  "headline": "Senior AI Engineer at TalentCloud",
+  "summary": "6+ years of full-stack engineering and 3 years of generative AI product delivery in recruiting and workflow automation.",
+  "email": "alex.martin@example.com",
+  "profileUrl": "https://www.linkedin.com/in/alex-martin-example",
+  "skills": [
+    "TypeScript",
+    "React",
+    "Next.js",
+    "Node.js",
+    "Python",
+    "Prompt Engineering",
+    "RAG",
+    "OpenAI",
+    "SQL",
+    "AWS"
+  ],
+  "experience": [
+    {
+      "title": "Senior AI Engineer",
+      "company": "TalentCloud",
+      "duration": "2023 - Present",
+      "description": "Built explainable recruiter shortlisting platform with human override logs."
+    },
+    {
+      "title": "Software Engineer",
+      "company": "ScaleForge",
+      "duration": "2019 - 2023",
+      "description": "Shipped analytics dashboards and API platform."
+    }
+  ],
+  "education": [
+    {
+      "degree": "B.Tech Computer Science",
+      "school": "NIT Trichy",
+      "year": "2019"
+    }
+  ],
+  "certifications": [
+    {
+      "name": "AWS Certified Developer Associate",
+      "issuer": "AWS"
+    }
+  ],
+  "projects": [
+    {
+      "name": "HireSignal AI",
+      "description": "LLM-based candidate matching workflow with score explanations.",
+      "technologies": ["Next.js", "Node.js", "OpenAI", "PostgreSQL"],
+      "link": "https://github.com/example/hiresignal-ai"
+    }
+  ]
+}
