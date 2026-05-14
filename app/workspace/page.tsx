@@ -50,7 +50,9 @@ function normalizeWeights(weights: Record<ScoreDimensionKey, number>) {
 }
 
 export default function WorkspacePage() {
-  const [shouldLoadDemo, setShouldLoadDemo] = useState(false);
+  const [shouldLoadDemo] = useState(
+    () => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("demo") === "1"
+  );
 
   const [jdText, setJdText] = useState("");
   const [jdFile, setJdFile] = useState<File | null>(null);
@@ -70,11 +72,6 @@ export default function WorkspacePage() {
   const [runningEval, setRunningEval] = useState(false);
   const [loadingDemo, setLoadingDemo] = useState(false);
   const [parsingStatus, setParsingStatus] = useState<string>("");
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setShouldLoadDemo(params.get("demo") === "1");
-  }, []);
 
   useEffect(() => {
     if (!shouldLoadDemo) return;
