@@ -149,5 +149,66 @@ HireWise AI is designed as a **Decision Support System**, not an automated hirin
 
 ---
 
-## 📄 License
-This project is licensed under the MIT License.
+## Snapshots of HireWise
+
+### Landing Page
+The entry point of the application, highlighting our core value propositions: Production Workflows, Transparent AI Scoring, and Responsible AI Guardrails.
+
+![Landing Page](./screenshots/Screenshot%202026-05-15%20095711.jpg)
+
+### Role-Based Access
+Secure login with predefined demo credentials for Admin, Recruiter, Hiring Manager, and Viewer roles to test end-to-end workflows.
+
+![Sign In](./screenshots/Screenshot%202026-05-15%20095802.png)
+
+---
+
+## 📊 Dashboard & Analytics
+
+### Talent OS Dashboard
+A high-level overview of active jobs, candidate funnels, and score distributions to keep recruiters informed at a glance.
+
+![Dashboard](./screenshots/Screenshot%202026-05-15%20095817.jpg)
+
+### Advanced Analytics
+Deep dive into application trends, shortlist conversion rates, and recruiter activity metrics.
+
+![Analytics](./screenshots/Screenshot%202026-05-15%20100146.jpg)
+
+---
+
+## 🛠 Recruitment Workflow
+
+### 1. Job Requisition
+Define role scopes, mandatory "knockout" criteria, and specific skill requirements for AI evaluation.
+
+![Jobs](./screenshots/Screenshot%202026-05-15%20095858.jpg)
+
+### 2. Candidate Management
+Batch upload resumes and enrich profiles with LinkedIn data to build a searchable candidate directory.
+
+![Candidates](./screenshots/Screenshot%202026-05-15%20095957.jpg)
+
+### 3. AI Evaluation Queue
+Transparent scoring with automated "Matched Skills" and "Missing Skills" analysis. Candidates can be moved through statuses like `SENT_TO_HIRING_MANAGER` or `HOLD`.
+
+![Evaluations](./screenshots/Screenshot%202026-05-15%20100012.jpg)
+
+### 4. Collaborative Shortlisting
+A dedicated space for recruiters and hiring managers to collaborate on final candidate selections.
+
+![Shortlist](./screenshots/Screenshot%202026-05-15%20100039.jpg)
+
+---
+
+## 📄 Reporting & Compliance
+
+### Report Generation
+Export comprehensive, recruiter-friendly reports in PDF, JSON, or HTML formats, including methodology and ranking logic.
+
+![Reports](./screenshots/Screenshot%202026-05-15%20100050.jpg)
+
+### Sample PDF Output
+An example of the generated Hiring Intelligence Report featuring ranked candidates and responsible AI disclaimers.
+
+![PDF Report](./screenshots/Screenshot%202026-05-15%20100131.png)
