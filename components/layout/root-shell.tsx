@@ -119,14 +119,21 @@ export function RootShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-50 via-white to-purple-50">
       <div className="flex min-h-screen">
-        <aside className="hidden w-72 border-r border-slate-200 bg-white p-4 lg:block">
-          <div className="mb-6 px-2">
-            <p className="text-xs font-semibold uppercase tracking-wider text-sky-700">HireWise AI</p>
-            <h2 className="text-lg font-bold text-slate-900">Talent OS</h2>
+        <aside className="hidden w-72 border-r border-sky-100/50 bg-white/60 backdrop-blur-xl p-4 lg:block shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10">
+          <div className="mb-8 px-2 mt-2">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 shadow-md flex items-center justify-center">
+                <ShieldCheck className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-600/80">HireWise AI</p>
+                <h2 className="text-xl font-extrabold text-slate-800 tracking-tight">Talent OS</h2>
+              </div>
+            </div>
           </div>
-          <nav className="space-y-1">
+          <nav className="space-y-1.5">
             {appNav.map((item) => {
               const Icon = item.icon;
               const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -135,13 +142,16 @@ export function RootShell({ children }: { children: React.ReactNode }) {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition",
+                    "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-200 group relative",
                     active
-                      ? "bg-sky-100 text-sky-800"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                      ? "bg-white text-indigo-700 shadow-sm border border-indigo-100"
+                      : "text-slate-600 hover:bg-white/50 hover:text-indigo-600 border border-transparent"
                   )}
                 >
-                  <Icon className="h-4 w-4" />
+                  {active && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-600 rounded-r-full" />
+                  )}
+                  <Icon className={cn("h-4 w-4 transition-transform group-hover:scale-110", active ? "text-indigo-600" : "text-slate-400 group-hover:text-indigo-500")} />
                   {item.label}
                 </Link>
               );
@@ -149,36 +159,42 @@ export function RootShell({ children }: { children: React.ReactNode }) {
           </nav>
         </aside>
 
-        <div className="flex-1">
-          <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur-sm sm:px-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex-1 flex flex-col relative z-0">
+          <header className="sticky top-0 z-20 border-b border-sky-100/50 bg-white/70 px-6 py-4 backdrop-blur-md shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <p className="text-xs uppercase tracking-wider text-slate-500">Enterprise Workspace</p>
-                <h1 className="text-xl font-bold text-slate-900">{toTitle(pathname)}</h1>
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Enterprise Workspace</p>
+                <h1 className="text-2xl font-bold text-slate-800 tracking-tight">{toTitle(pathname)}</h1>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="hidden rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 sm:block">
-                  <p className="font-semibold text-slate-700">{user?.organizationName ?? "Organization"}</p>
-                  <p>
-                    {user?.name ?? "User"} ({user?.role ?? "Role"})
-                  </p>
+              <div className="flex items-center gap-4">
+                <div className="hidden rounded-2xl border border-indigo-50 bg-white/80 shadow-sm px-4 py-2 text-xs text-slate-600 sm:flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 flex items-center justify-center text-indigo-700 font-bold border border-indigo-200">
+                    {user?.name?.[0]?.toUpperCase() ?? "U"}
+                  </div>
+                  <div>
+                    <p className="font-bold text-slate-800">{user?.organizationName ?? "Organization"}</p>
+                    <p className="text-slate-500 font-medium">
+                      {user?.name ?? "User"} <span className="text-indigo-400 opacity-70">•</span> {user?.role ?? "Role"}
+                    </p>
+                  </div>
                 </div>
                 <Button
-                  variant="ghost"
+                  variant="secondary"
                   size="sm"
+                  className="rounded-xl border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors"
                   onClick={async () => {
                     await fetch("/api/auth/logout", { method: "POST" });
                     router.push("/login");
                     router.refresh();
                   }}
                 >
-                  <LogOut className="h-4 w-4" />
+                  <LogOut className="h-4 w-4 mr-2" />
                   Logout
                 </Button>
               </div>
             </div>
           </header>
-          <main className="mx-auto max-w-[1400px] p-4 sm:p-6">{children}</main>
+          <main className="mx-auto w-full max-w-[1400px] p-6 lg:p-8 flex-1">{children}</main>
         </div>
       </div>
     </div>

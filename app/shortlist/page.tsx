@@ -39,9 +39,12 @@ export default function ShortlistPage() {
     void (async () => {
       setLoading(true);
       try {
-        const response = await fetch("/api/evaluations?status=SHORTLISTED");
+        const response = await fetch("/api/evaluations");
         const data = await response.json();
-        setApplications(data.applications ?? []);
+        const pipeline = (data.applications ?? []).filter((application: Application) =>
+          ["SHORTLISTED", "SENT_TO_HIRING_MANAGER", "HIRED"].includes(application.status)
+        );
+        setApplications(pipeline);
       } finally {
         setLoading(false);
       }

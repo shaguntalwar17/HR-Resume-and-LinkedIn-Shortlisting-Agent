@@ -10,14 +10,11 @@ import { settingsSchema } from "@/lib/validation/platform";
 export const runtime = "nodejs";
 
 const fallbackWeights = {
-  mandatorySkills: 0.25,
-  preferredSkills: 0.1,
-  experience: 0.2,
-  domain: 0.1,
-  education: 0.1,
-  projects: 0.1,
-  communication: 0.08,
-  semantic: 0.07,
+  skillsMatch: 0.3,
+  experienceRelevance: 0.25,
+  educationCerts: 0.15,
+  projectPortfolio: 0.2,
+  communicationQuality: 0.1,
 };
 
 export async function GET(request: NextRequest) {

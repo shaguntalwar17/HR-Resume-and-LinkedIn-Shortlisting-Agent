@@ -3,7 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { createAuditLog } from "@/lib/audit/logger";
 import { requireRole, requireSession } from "@/lib/auth/guards";
+import { mapJob } from "@/lib/db/mappers";
 import { prisma } from "@/lib/db/prisma";
+import { parseJobDescription } from "@/lib/parsers/jd-parser";
 import { createJobSchema } from "@/lib/validation/platform";
 
 export const runtime = "nodejs";
@@ -24,7 +26,7 @@ export async function GET(request: NextRequest) {
     },
   });
 
-  return NextResponse.json({ jobs });
+  return NextResponse.json({ jobs: jobs.map(mapJob) });
 }
 
 export async function POST(request: NextRequest) {
@@ -34,6 +36,22 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const payload = createJobSchema.parse(body);
+    const parsedJd = parseJobDescription(payload.description);
+    const requiredSkills = payload.requiredSkills.length ? payload.requiredSkills : parsedJd.requiredSkills;
+    const preferredSkills = payload.preferredSkills.length
+      ? payload.preferredSkills
+      : parsedJd.preferredSkills;
+    const responsibilities = payload.responsibilities.length
+      ? payload.responsibilities
+      : parsedJd.responsibilities;
+    const qualifications = payload.qualifications.length
+      ? payload.qualifications
+      : parsedJd.educationRequirements;
+    const certifications = payload.certifications.length
+      ? payload.certifications
+      : parsedJd.certifications;
+
+    const knockoutCriteria = payload.knockoutCriteria ?? payload.scoringConfig?.knockoutCriteria;
 
     const job = await prisma.jobRequisition.create({
       data: {
@@ -44,12 +62,19 @@ export async function POST(request: NextRequest) {
         employmentType: payload.employmentType ?? null,
         seniority: payload.seniority ?? null,
         description: payload.description,
-        requiredSkills: toInputJson(payload.requiredSkills),
-        preferredSkills: toInputJson(payload.preferredSkills),
+        salaryMin: payload.salaryMin ?? null,
+        salaryMax: payload.salaryMax ?? null,
+        requiredSkills: toInputJson(requiredSkills),
+        preferredSkills: toInputJson(preferredSkills),
+        responsibilities: toNullableInputJson(responsibilities),
+        qualifications: toNullableInputJson(qualifications),
+        certifications: toNullableInputJson(certifications),
         minExperience: payload.minExperience,
         maxExperience: payload.maxExperience ?? null,
         status: payload.status,
         scoringConfig: payload.scoringConfig ? toInputJson(payload.scoringConfig) : Prisma.JsonNull,
+        knockoutCriteria: knockoutCriteria ? toInputJson(knockoutCriteria) : Prisma.JsonNull,
+        jdParsedJson: toInputJson(parsedJd),
         createdById: user.userId,
       },
     });
@@ -63,7 +88,7 @@ export async function POST(request: NextRequest) {
       newValue: job,
     });
 
-    return NextResponse.json({ job }, { status: 201 });
+    return NextResponse.json({ job: mapJob(job) }, { status: 201 });
   } catch (error) {
     console.error("Create job error", error);
     return NextResponse.json({ error: "Failed to create job requisition." }, { status: 500 });
@@ -72,4 +97,14 @@ export async function POST(request: NextRequest) {
 
 function toInputJson(value: unknown): Prisma.InputJsonValue {
   return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
+}
+
+function toNullableInputJson(
+  value: unknown
+): Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput {
+  if (value === null || value === undefined) {
+    return Prisma.JsonNull;
+  }
+
+  return toInputJson(value);
 }

@@ -55,6 +55,9 @@ export async function GET(request: NextRequest) {
         },
         orderBy: { createdAt: "desc" },
       },
+      scoreBreakdowns: {
+        orderBy: { createdAt: "asc" },
+      },
     },
     orderBy: [{ overallScore: "desc" }, { updatedAt: "desc" }],
   });

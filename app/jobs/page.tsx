@@ -17,9 +17,21 @@ type Job = {
   title: string;
   department: string | null;
   location: string | null;
+  employmentType: string | null;
+  seniority: string | null;
   status: string;
+  salaryMin: number | null;
+  salaryMax: number | null;
   requiredSkills: string[];
   preferredSkills: string[];
+  responsibilities: string[];
+  qualifications: string[];
+  certifications: string[];
+  knockoutCriteria?: {
+    minimumMandatorySkillMatchPercentage?: number;
+    minimumExperienceYears?: number;
+    rejectOnMissingMandatorySkillsCount?: number;
+  } | null;
   minExperience: number;
   maxExperience: number | null;
   _count?: { applications: number };
@@ -29,6 +41,13 @@ type Job = {
 function csvToArray(text: string) {
   return text
     .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+function lineToArray(text: string) {
+  return text
+    .split(/\r?\n/g)
     .map((part) => part.trim())
     .filter(Boolean);
 }
@@ -46,8 +65,16 @@ export default function JobsPage() {
     description: "",
     requiredSkills: "",
     preferredSkills: "",
+    responsibilities: "",
+    qualifications: "",
+    certifications: "",
     minExperience: "2",
     maxExperience: "8",
+    salaryMin: "",
+    salaryMax: "",
+    minimumMandatorySkillMatchPercentage: "",
+    minimumExperienceYears: "",
+    rejectOnMissingMandatorySkillsCount: "",
     status: "DRAFT",
   });
 
@@ -84,8 +111,20 @@ export default function JobsPage() {
           ...form,
           requiredSkills: csvToArray(form.requiredSkills),
           preferredSkills: csvToArray(form.preferredSkills),
+          responsibilities: lineToArray(form.responsibilities),
+          qualifications: lineToArray(form.qualifications),
+          certifications: lineToArray(form.certifications),
           minExperience: Number.parseInt(form.minExperience, 10) || 0,
           maxExperience: Number.parseInt(form.maxExperience, 10) || undefined,
+          salaryMin: Number.parseInt(form.salaryMin, 10) || undefined,
+          salaryMax: Number.parseInt(form.salaryMax, 10) || undefined,
+          knockoutCriteria: {
+            minimumMandatorySkillMatchPercentage:
+              Number.parseFloat(form.minimumMandatorySkillMatchPercentage) || undefined,
+            minimumExperienceYears: Number.parseFloat(form.minimumExperienceYears) || undefined,
+            rejectOnMissingMandatorySkillsCount:
+              Number.parseInt(form.rejectOnMissingMandatorySkillsCount, 10) || undefined,
+          },
         }),
       });
       const data = await response.json();
@@ -102,8 +141,16 @@ export default function JobsPage() {
         description: "",
         requiredSkills: "",
         preferredSkills: "",
+        responsibilities: "",
+        qualifications: "",
+        certifications: "",
         minExperience: "2",
         maxExperience: "8",
+        salaryMin: "",
+        salaryMax: "",
+        minimumMandatorySkillMatchPercentage: "",
+        minimumExperienceYears: "",
+        rejectOnMissingMandatorySkillsCount: "",
         status: "DRAFT",
       });
       await fetchJobs();
@@ -186,6 +233,27 @@ export default function JobsPage() {
               onChange={(event) => setForm((prev) => ({ ...prev, preferredSkills: event.target.value }))}
             />
           </Field>
+          <Field label="Responsibilities (one per line)">
+            <Textarea
+              value={form.responsibilities}
+              onChange={(event) => setForm((prev) => ({ ...prev, responsibilities: event.target.value }))}
+              className="min-h-[80px]"
+            />
+          </Field>
+          <Field label="Qualifications (one per line)">
+            <Textarea
+              value={form.qualifications}
+              onChange={(event) => setForm((prev) => ({ ...prev, qualifications: event.target.value }))}
+              className="min-h-[80px]"
+            />
+          </Field>
+          <Field label="Certifications (one per line)">
+            <Textarea
+              value={form.certifications}
+              onChange={(event) => setForm((prev) => ({ ...prev, certifications: event.target.value }))}
+              className="min-h-[80px]"
+            />
+          </Field>
           <div className="grid gap-3 md:grid-cols-2">
             <Field label="Min Experience">
               <Input
@@ -201,6 +269,60 @@ export default function JobsPage() {
                 onChange={(event) => setForm((prev) => ({ ...prev, maxExperience: event.target.value }))}
               />
             </Field>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <Field label="Salary Min (annual)">
+              <Input
+                type="number"
+                value={form.salaryMin}
+                onChange={(event) => setForm((prev) => ({ ...prev, salaryMin: event.target.value }))}
+              />
+            </Field>
+            <Field label="Salary Max (annual)">
+              <Input
+                type="number"
+                value={form.salaryMax}
+                onChange={(event) => setForm((prev) => ({ ...prev, salaryMax: event.target.value }))}
+              />
+            </Field>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Knockout Criteria</p>
+            <div className="grid gap-3 md:grid-cols-3">
+              <Field label="Min mandatory skills %">
+                <Input
+                  type="number"
+                  value={form.minimumMandatorySkillMatchPercentage}
+                  onChange={(event) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      minimumMandatorySkillMatchPercentage: event.target.value,
+                    }))
+                  }
+                />
+              </Field>
+              <Field label="Min experience years">
+                <Input
+                  type="number"
+                  value={form.minimumExperienceYears}
+                  onChange={(event) =>
+                    setForm((prev) => ({ ...prev, minimumExperienceYears: event.target.value }))
+                  }
+                />
+              </Field>
+              <Field label="Reject if missing skills >=">
+                <Input
+                  type="number"
+                  value={form.rejectOnMissingMandatorySkillsCount}
+                  onChange={(event) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      rejectOnMissingMandatorySkillsCount: event.target.value,
+                    }))
+                  }
+                />
+              </Field>
+            </div>
           </div>
           <Field label="Status">
             <Select value={form.status} onChange={(event) => setForm((prev) => ({ ...prev, status: event.target.value }))}>
@@ -233,6 +355,12 @@ export default function JobsPage() {
                       {job.department ?? "General"} | {job.location ?? "Remote/Hybrid"} | {job.minExperience}
                       {job.maxExperience ? `-${job.maxExperience}` : "+"} years
                     </p>
+                    {job.salaryMin || job.salaryMax ? (
+                      <p className="text-xs text-slate-500">
+                        Salary: {job.salaryMin ? `$${job.salaryMin.toLocaleString()}` : "N/A"} -{" "}
+                        {job.salaryMax ? `$${job.salaryMax.toLocaleString()}` : "Open"}
+                      </p>
+                    ) : null}
                     <div className="mt-2 flex flex-wrap gap-2">
                       <Badge>{job.status}</Badge>
                       <Badge variant="info">{job._count?.applications ?? 0} evaluations</Badge>
@@ -271,6 +399,28 @@ export default function JobsPage() {
                     </div>
                   </div>
                 </div>
+                {(job.responsibilities?.length ?? 0) > 0 ? (
+                  <div className="mt-2">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Responsibilities</p>
+                    <p className="mt-1 text-xs text-slate-600">
+                      {job.responsibilities.slice(0, 4).join(" | ")}
+                    </p>
+                  </div>
+                ) : null}
+                {job.knockoutCriteria ? (
+                  <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                    Knockout:
+                    {job.knockoutCriteria.minimumMandatorySkillMatchPercentage
+                      ? ` mandatory skills >= ${job.knockoutCriteria.minimumMandatorySkillMatchPercentage}%`
+                      : ""}
+                    {job.knockoutCriteria.minimumExperienceYears
+                      ? ` | experience >= ${job.knockoutCriteria.minimumExperienceYears} yrs`
+                      : ""}
+                    {job.knockoutCriteria.rejectOnMissingMandatorySkillsCount
+                      ? ` | reject if missing skills >= ${job.knockoutCriteria.rejectOnMissingMandatorySkillsCount}`
+                      : ""}
+                  </div>
+                ) : null}
               </div>
             ))
           ) : (

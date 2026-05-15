@@ -1,73 +1,62 @@
-# HireWise AI Resume & LinkedIn Shortlisting Agent
+# 🚀 HireWise AI: HR Resume & LinkedIn Shortlisting Agent
 
-[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma)](https://www.prisma.io/)
-[![Status](https://img.shields.io/badge/Build-Passing-22c55e)](#lint-and-build)
-[![License](https://img.shields.io/badge/License-MIT-blue)](#)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?style=for-the-badge&logo=prisma)](https://www.prisma.io/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Status](https://img.shields.io/badge/Status-Production_Ready-22c55e?style=for-the-badge)](#)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](#)
 
-HireWise AI is a production-style HR shortlisting system for recruiters, hiring managers, and talent acquisition teams.  
-It parses job descriptions and resumes, evaluates fit with transparent scoring, supports human override workflows, and produces auditable reports.
+**HireWise AI** is an advanced, production-ready HR tech platform designed to streamline the talent acquisition process. It acts as an intelligent shortlisting agent for recruiters, hiring managers, and HR teams, helping them rapidly evaluate candidates against Job Descriptions (JDs) using transparent, AI-assisted scoring rubrics.
 
-## Product Overview
-This platform is designed to reduce manual screening fatigue while keeping humans in control:
-- Structured JD parsing and candidate ingestion
-- Role-based recruiter workflows
-- Explainable candidate scoring and ranking
-- Review, override, note-taking, and audit logs
-- Downloadable hiring reports (JSON/HTML/PDF)
-- Responsible AI guardrails for fairness and traceability
+By eliminating manual screening fatigue and introducing deep semantic matching, HireWise AI empowers teams to make faster, fairer, and highly auditable hiring decisions while keeping a "Human-in-the-Loop" for critical overrides.
 
-## Key Features
-- Authentication and protected routes
-- Multi-role access model: `ADMIN`, `RECRUITER`, `HIRING_MANAGER`, `VIEWER`
-- Organization-scoped data model and APIs
-- Job requisition management
-- Candidate upload (PDF/DOCX/TXT) + LinkedIn JSON enrichment
-- Deterministic scoring engine + optional semantic enhancement
-- Candidate pipeline statuses and bulk actions
-- Recruiter reviews, score overrides, and full audit history
-- Analytics dashboards and skill-gap visibility
-- ATS integration-ready webhook architecture
-- Health endpoint and production security hardening
+---
 
-## Tech Stack
-- Next.js 16 App Router + TypeScript
-- Tailwind CSS + reusable UI components
-- Prisma ORM + SQLite (current persistence engine)
-- Zod validation, React Hook Form
-- Recharts analytics
-- `pdf-parse`, `mammoth`, `pdf-lib`
-- Optional AI provider abstraction
+## ✨ Key Features & Capabilities
 
-## Folder Structure
-```text
-app/
-  api/
-  dashboard/
-  jobs/
-  candidates/
-  evaluations/
-  reports/
-  analytics/
-components/
-  layout/
-  evaluations/
-  ui/
-lib/
-  auth/
-  db/
-  parsers/
-  scoring/
-  reporting/
-  security/
-  validation/
-prisma/
-docs/
-public/
-```
+### 🔐 Enterprise-Grade Access & Security
+- **Role-Based Access Control (RBAC):** Distinct workflows for `ADMIN`, `RECRUITER`, `HIRING_MANAGER`, and `VIEWER`.
+- **Organization-Scoped Data:** Multi-tenant architecture ensuring isolated candidate and job data.
+- **Responsible AI Guardrails:** System strictly ignores protected attributes (gender, age, marital status, religion) to ensure bias-free screening.
+- **Full Audit Logging:** Every profile update, score override, and status change is immutably logged.
 
-## Architecture
+### 📄 Intelligent Data Ingestion
+- **Robust Resume Parsing:** Extracts structured data from PDF and DOCX files securely.
+- **LinkedIn Enrichment:** Supports importing JSON-formatted LinkedIn profile data to enrich candidate records.
+- **Advanced Job Requisitions:** Capture complex criteria including salary ranges, required/preferred skills, certifications, and hard knockout constraints.
+
+### 🧠 Advanced Scoring Engine
+- **5-Dimensional Rubric:** Candidates are evaluated across:
+  - 🛠️ *Skills Match* (30%)
+  - 🏢 *Experience Relevance* (25%)
+  - 🎓 *Education & Certifications* (15%)
+  - 🚀 *Projects & Portfolio* (20%)
+  - 💬 *Communication Quality* (10%)
+- **Deterministic & Semantic Fallbacks:** Combines exact-match heuristics with semantic evaluation.
+- **Explainable AI:** Generates one-line human-readable justifications for every dimension score.
+
+### 📊 Recruiter Workflows & Reporting
+- **Interactive Shortlisting:** Rank candidates as `STRONG_SHORTLIST`, `SHORTLIST`, `HOLD`, or `REJECT`.
+- **Hiring Manager Handoff:** Dedicated assignment state (`SENT_TO_HIRING_MANAGER`) for internal team review.
+- **Human Overrides:** Recruiters can override AI scores (with mandatory justification).
+- **Downloadable Reports:** Instantly generate comprehensive hiring reports in JSON, HTML, or PDF formats.
+- **Visual Analytics:** Dashboard charts tracking skill gaps, pipeline velocity, and candidate source distribution.
+
+---
+
+## 🏗️ Architecture & Tech Stack
+
+HireWise AI is built on a modern, serverless-ready stack:
+
+- **Frontend:** Next.js 16 (App Router), React, TypeScript, Tailwind CSS, shadcn/ui.
+- **Backend:** Next.js Route Handlers (Node.js runtime).
+- **Database:** Prisma ORM with SQLite (Easily swappable to PostgreSQL for enterprise deployments).
+- **Document Processing:** `pdf2json`, `mammoth`, `pdf-lib`.
+- **Validation & State:** Zod schema validation, React Hook Form, Zustand (for ephemeral state).
+- **Analytics:** Recharts.
+
+### System Workflow
 ```mermaid
 flowchart LR
   UI[Web App UI] --> Proxy[Next.js Proxy auth gate]
@@ -80,110 +69,85 @@ flowchart LR
   API --> STORAGE[(Resume Storage)]
 ```
 
-## Agent Workflow
-```mermaid
-flowchart TD
-  A[Recruiter login] --> B[Create/select job requisition]
-  B --> C[Upload resumes + LinkedIn JSON]
-  C --> D[Parse and structure candidate profiles]
-  D --> E[Run candidate-job evaluation]
-  E --> F[Ranked shortlist + explainability]
-  F --> G[Recruiter review: shortlist/reject/hold]
-  G --> H[Hiring manager review + comments]
-  H --> I[Export reports + audit trail]
-```
+---
 
-## Scoring Methodology
-Mandatory rubric:
-- Skills Match: 30%
-- Experience Relevance: 25%
-- Education and Certifications: 15%
-- Project and Portfolio: 20%
-- Communication Quality: 10%
+## 🚀 Getting Started (Local Development)
 
-Formula:
-```text
-total_score =
-(skills_match_score * 0.30 +
- experience_relevance_score * 0.25 +
- education_certs_score * 0.15 +
- project_portfolio_score * 0.20 +
- communication_quality_score * 0.10) * 10
-```
+### Prerequisites
+- Node.js (v20+ recommended)
+- npm or yarn
 
-Recommendation thresholds:
-- 85-100: `STRONG_SHORTLIST`
-- 70-84: `SHORTLIST`
-- 55-69: `HOLD` / manual review
-- <55: `REJECT`
-
-## Real-World Deployment Decision
-For this codebase **today**, the safest production path is:
-1. Deploy as a containerized Next.js service on a platform with persistent disk support (for SQLite durability) such as Railway/Render/Fly.
-2. Keep uploads in persistent volume or configure `@vercel/blob` for managed object storage.
-3. Disable demo mode in production and enforce webhook secrets + rate limits.
-
-Why not Vercel-only with local SQLite:
-- Vercel serverless filesystem is ephemeral and not reliable for SQLite writes.  
-Reference: Vercel docs on SQLite support.
-
-## Local Setup
+### 1. Clone & Install
 ```bash
+git clone https://github.com/shaguntalwar17/HR-Resume-and-LinkedIn-Shortlisting-Agent.git
+cd hirewise-ai-shortlisting-agent
 npm install
+```
+
+### 2. Environment Setup
+Copy the example environment variables file and customize it if needed.
+```bash
+cp .env.example .env.local
+```
+
+### 3. Run the Development Server
+```bash
 npm run dev
 ```
-Open `http://localhost:3000`.
+Navigate to [http://localhost:3000](http://localhost:3000) to view the application.
 
-Demo credentials (when demo mode is enabled):
-- `admin@hirewise.demo` / `DemoPass#123`
-- `recruiter@hirewise.demo` / `DemoPass#123`
-- `manager@hirewise.demo` / `DemoPass#123`
-- `viewer@hirewise.demo` / `DemoPass#123`
+### Demo Credentials
+When `ENABLE_DEMO_MODE=true` is set, you can log in using the following accounts:
+- **Admin:** `admin@hirewise.demo` / `DemoPass#123`
+- **Recruiter:** `recruiter@hirewise.demo` / `DemoPass#123`
+- **Hiring Manager:** `manager@hirewise.demo` / `DemoPass#123`
 
-## Lint and Build
+---
+
+## 🐳 Docker Deployment
+
+To run the application via Docker (with persistent volumes for the SQLite database and uploaded files):
+
 ```bash
-npm run lint
-npm run build
+docker compose up --build -d
 ```
+The app will be available on `http://localhost:3000`.
 
-## Environment Variables
-Copy `.env.example` to `.env.local` and configure:
-- `AUTH_SECRET`
-- `DATABASE_URL`
-- `ENABLE_DEMO_MODE`
-- `NEXT_PUBLIC_DEMO_MODE`
-- `AUTO_BOOTSTRAP_SCHEMA`
-- Storage, webhook, and AI variables as needed
+---
 
-## Docker Deployment
-```bash
-docker compose up --build
-```
-This uses persistent volumes for DB and uploads.
+## 🌍 Production Deployment Guide
 
-## Vercel Notes
-Vercel is suitable for demo UI and stateless workloads, but SQLite persistence is not production-safe on serverless storage.  
-If you need Vercel production, migrate DB to managed Postgres and update Prisma datasource/provider accordingly.
+### Vercel / Serverless Environments
+If deploying to Vercel, be aware that serverless filesystems are ephemeral. **SQLite and local file uploads are not suitable for Vercel production.**
+To deploy on Vercel:
+1. Migrate the Prisma datasource from `sqlite` to `postgresql` and provide a managed DB connection string (e.g., Supabase, Neon).
+2. Configure a cloud blob storage provider (like `@vercel/blob` or AWS S3) for the `RESUME_STORAGE_PROVIDER`.
+3. Set `ENABLE_DEMO_MODE=false`.
 
-## Responsible AI
-- Sensitive/protected attributes are ignored for scoring
-- System assists hiring decisions, it does not automate final hiring
-- Human review is required before final disposition
-- All material overrides are logged for auditability
+### VPS / Docker (Render, Railway, DigitalOcean)
+The current SQLite + Local Uploads architecture works perfectly out-of-the-box on any containerized hosting platform that supports **persistent disk volumes**.
 
-## Docs
-- [Architecture](docs/architecture.md)
-- [Scoring Methodology](docs/scoring-methodology.md)
-- [Deployment Guide](docs/deployment-guide.md)
+---
 
-## Screenshots Placeholder
-- `docs/screenshots/landing.png`
-- `docs/screenshots/dashboard.png`
-- `docs/screenshots/evaluations.png`
-- `docs/screenshots/reports.png`
+## 🎯 Testing the End-to-End Workflow
 
-## Roadmap
-- Managed PostgreSQL default + migration workflow
-- SSO/SAML and enterprise identity integration
-- Advanced ATS sync (Greenhouse, Lever, Workday, BambooHR)
-- Deletion/anonymization workflows for privacy compliance
+1. **Login:** Access the dashboard as `recruiter@hirewise.demo`.
+2. **Requisition Setup:** Create a new Job Requisition, defining the necessary skills and knockout criteria.
+3. **Ingestion:** Navigate to the **Candidates** page and bulk-upload test PDF/DOCX resumes.
+4. **Evaluation:** Return to the Job page and click **Run Evaluation** to score the candidates.
+5. **Review:** Open the **Evaluations** tab to drill down into the generated rubrics and justifications.
+6. **Action:** Assign a candidate to a Hiring Manager or apply a Human Override.
+7. **Export:** Click **Download Report** to generate the final Shortlist PDF.
+
+---
+
+## 🤝 Responsible AI Statement
+HireWise AI is designed as a **Decision Support System**, not an automated hiring arbiter. 
+- It flags but does not strictly reject candidates without human review.
+- It actively monitors for and strips out sensitive/protected status keywords before semantic scoring.
+- Final disposition authority always rests with human recruiters.
+
+---
+
+## 📄 License
+This project is licensed under the MIT License.

@@ -41,6 +41,7 @@ enum ApplicationStatus {
   PARSED
   EVALUATED
   REVIEWED
+  SENT_TO_HIRING_MANAGER
   SHORTLISTED
   REJECTED
   HOLD
@@ -118,12 +119,19 @@ model JobRequisition {
   employmentType  String?
   seniority       String?
   description     String
+  salaryMin       Int?
+  salaryMax       Int?
   requiredSkills  Json
   preferredSkills Json
+  responsibilities Json?
+  qualifications  Json?
+  certifications  Json?
   minExperience   Int                     @default(0)
   maxExperience   Int?
   status          JobStatus               @default(DRAFT)
   scoringConfig   Json?
+  knockoutCriteria Json?
+  jdParsedJson    Json?
   createdById     String
   createdBy       User                    @relation("JobCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
   createdAt       DateTime                @default(now())
@@ -159,6 +167,8 @@ model Candidate {
   createdAt                DateTime                @default(now())
   updatedAt                DateTime                @updatedAt
   applications             ApplicationEvaluation[]
+  resumeDocuments          ResumeDocument[]
+  linkedInProfiles         LinkedInProfileData[]
 }
 
 model ApplicationEvaluation {
@@ -190,8 +200,43 @@ model ApplicationEvaluation {
   createdAt               DateTime                  @default(now())
   updatedAt               DateTime                  @updatedAt
   reviews                 RecruiterReview[]
+  scoreBreakdowns         ScoreBreakdown[]
 
   @@unique([jobId, candidateId])
+}
+
+model ScoreBreakdown {
+  id             String                @id @default(cuid())
+  evaluationId   String
+  evaluation     ApplicationEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  dimension      String
+  weight         Float
+  rawScore       Float
+  weightedScore  Float
+  justification  String
+  evidenceJson   Json?
+  createdAt      DateTime              @default(now())
+}
+
+model ResumeDocument {
+  id             String     @id @default(cuid())
+  candidateId    String
+  candidate      Candidate  @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  fileName       String
+  mimeType       String
+  sizeBytes      Int
+  storageUrl     String
+  parsedText     String
+  createdAt      DateTime   @default(now())
+}
+
+model LinkedInProfileData {
+  id             String     @id @default(cuid())
+  candidateId    String
+  candidate      Candidate  @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  payloadJson    Json
+  source         String?
+  createdAt      DateTime   @default(now())
 }
 
 model RecruiterReview {

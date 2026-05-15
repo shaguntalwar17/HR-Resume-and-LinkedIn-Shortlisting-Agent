@@ -3,7 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { createAuditLog } from "@/lib/audit/logger";
 import { requireRole, requireSession } from "@/lib/auth/guards";
+import { mapJob } from "@/lib/db/mappers";
 import { prisma } from "@/lib/db/prisma";
+import { parseJobDescription } from "@/lib/parsers/jd-parser";
 import { updateJobSchema } from "@/lib/validation/platform";
 
 export const runtime = "nodejs";
@@ -22,6 +24,7 @@ export async function GET(
       applications: {
         include: {
           candidate: true,
+          scoreBreakdowns: true,
         },
       },
     },
@@ -31,7 +34,7 @@ export async function GET(
     return NextResponse.json({ error: "Job not found." }, { status: 404 });
   }
 
-  return NextResponse.json({ job });
+  return NextResponse.json({ job: mapJob(job) });
 }
 
 export async function PATCH(
@@ -52,6 +55,13 @@ export async function PATCH(
 
     const body = await request.json();
     const payload = updateJobSchema.parse(body);
+    const mergedDescription = payload.description ?? existing.description;
+    const parsedJd = parseJobDescription(mergedDescription);
+    const requiredSkills = payload.requiredSkills ?? (existing.requiredSkills as string[]);
+    const preferredSkills = payload.preferredSkills ?? (existing.preferredSkills as string[]);
+    const responsibilities = payload.responsibilities ?? ((existing.responsibilities as string[]) ?? []);
+    const qualifications = payload.qualifications ?? ((existing.qualifications as string[]) ?? []);
+    const certifications = payload.certifications ?? ((existing.certifications as string[]) ?? []);
 
     const job = await prisma.jobRequisition.update({
       where: { id: existing.id },
@@ -61,13 +71,20 @@ export async function PATCH(
         location: payload.location ?? existing.location,
         employmentType: payload.employmentType ?? existing.employmentType,
         seniority: payload.seniority ?? existing.seniority,
-        description: payload.description ?? existing.description,
-        requiredSkills: toInputJson(payload.requiredSkills ?? existing.requiredSkills),
-        preferredSkills: toInputJson(payload.preferredSkills ?? existing.preferredSkills),
+        description: mergedDescription,
+        salaryMin: payload.salaryMin ?? existing.salaryMin,
+        salaryMax: payload.salaryMax ?? existing.salaryMax,
+        requiredSkills: toInputJson(requiredSkills),
+        preferredSkills: toInputJson(preferredSkills),
+        responsibilities: toNullableInputJson(responsibilities),
+        qualifications: toNullableInputJson(qualifications),
+        certifications: toNullableInputJson(certifications),
         minExperience: payload.minExperience ?? existing.minExperience,
         maxExperience: payload.maxExperience ?? existing.maxExperience,
         status: payload.status ?? existing.status,
         scoringConfig: toNullableInputJson(payload.scoringConfig ?? existing.scoringConfig),
+        knockoutCriteria: toNullableInputJson(payload.knockoutCriteria ?? existing.knockoutCriteria),
+        jdParsedJson: toInputJson(parsedJd),
       },
     });
 
@@ -81,7 +98,7 @@ export async function PATCH(
       newValue: job,
     });
 
-    return NextResponse.json({ job });
+    return NextResponse.json({ job: mapJob(job) });
   } catch (error) {
     console.error("Update job error", error);
     return NextResponse.json({ error: "Failed to update job requisition." }, { status: 500 });

@@ -39,6 +39,10 @@ Core goals:
 
 ### Data Layer
 - Prisma models for organization, users, jobs, candidates, evaluations, reviews, reports, settings, integrations, and webhook logs.
+- Additional persistence models for production traceability:
+  - `ScoreBreakdown` (dimension-level rubric audit)
+  - `ResumeDocument` (file metadata + parsed text)
+  - `LinkedInProfileData` (manual/imported profile payload storage)
 - Current runtime uses SQLite-backed Prisma.
 - Development fallback bootstrap is enabled through `ensure-schema` for environments where Prisma push is unavailable.
 
@@ -47,7 +51,7 @@ Core goals:
 2. JD is parsed into structured requirements.
 3. Resumes and LinkedIn JSON are ingested and normalized.
 4. Candidate profile is scored against job criteria.
-5. Explanations, evidence snippets, and risk flags are generated.
+5. Explanations, evidence snippets, risk flags, and dimension-level weighted rubric rows are generated.
 6. Recruiter or hiring manager updates status/recommendation and may override with reason.
 7. Audit logs and reports preserve decision traceability.
 

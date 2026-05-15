@@ -103,7 +103,10 @@ export default function AnalyticsPage() {
   }, [applications]);
 
   const pendingManagerReview = useMemo(
-    () => applications.filter((application) => application.status === "REVIEWED").length,
+    () =>
+      applications.filter((application) =>
+        ["REVIEWED", "SENT_TO_HIRING_MANAGER"].includes(application.status)
+      ).length,
     [applications]
   );
 

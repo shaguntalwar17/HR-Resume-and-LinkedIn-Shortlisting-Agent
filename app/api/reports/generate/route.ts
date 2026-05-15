@@ -78,6 +78,9 @@ export async function POST(request: NextRequest) {
       where: { jobId: job.id },
       include: {
         candidate: true,
+        scoreBreakdowns: {
+          orderBy: { createdAt: "asc" },
+        },
         reviews: {
           include: { reviewer: true },
           orderBy: { createdAt: "desc" },

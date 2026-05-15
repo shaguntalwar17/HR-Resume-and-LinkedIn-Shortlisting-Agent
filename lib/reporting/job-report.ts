@@ -1,6 +1,13 @@
 import { format } from "date-fns";
 
-import { ApplicationEvaluation, Candidate, JobRequisition, RecruiterReview, User } from "@prisma/client";
+import {
+  ApplicationEvaluation,
+  Candidate,
+  JobRequisition,
+  RecruiterReview,
+  ScoreBreakdown,
+  User,
+} from "@prisma/client";
 
 function esc(value: string) {
   return value
@@ -13,6 +20,7 @@ function esc(value: string) {
 
 type ApplicationWithRelations = ApplicationEvaluation & {
   candidate: Candidate;
+  scoreBreakdowns: ScoreBreakdown[];
   reviews: Array<RecruiterReview & { reviewer: User }>;
 };
 
@@ -36,10 +44,16 @@ export function buildJobReportPayload(input: {
       location: input.job.location,
       seniority: input.job.seniority,
       employmentType: input.job.employmentType,
+      salaryMin: input.job.salaryMin,
+      salaryMax: input.job.salaryMax,
       minExperience: input.job.minExperience,
       status: input.job.status,
       requiredSkills: input.job.requiredSkills,
       preferredSkills: input.job.preferredSkills,
+      responsibilities: input.job.responsibilities,
+      qualifications: input.job.qualifications,
+      certifications: input.job.certifications,
+      knockoutCriteria: input.job.knockoutCriteria,
     },
     executiveSummary: {
       totalEvaluated: ranked.length,
@@ -72,6 +86,14 @@ export function buildJobReportPayload(input: {
       explanation: application.explanationJson,
       evidence: application.evidenceJson,
       riskFlags: application.riskFlagsJson,
+      scoreBreakdown: application.scoreBreakdowns.map((row) => ({
+        dimension: row.dimension,
+        weight: row.weight,
+        rawScore: row.rawScore,
+        weightedScore: row.weightedScore,
+        justification: row.justification,
+        evidence: row.evidenceJson,
+      })),
       reviews: application.reviews.map((review) => ({
         reviewer: review.reviewer.name,
         decision: review.decision,
@@ -104,15 +126,32 @@ export function buildJobReportHtml(input: ReturnType<typeof buildJobReportPayloa
 
   const details = input.candidates
     .map(
-      (candidate) => `
+      (candidate) => {
+        const dimensionRows = (candidate.scoreBreakdown as Array<{
+          dimension: string;
+          rawScore: number;
+          weight: number;
+          weightedScore: number;
+          justification: string;
+        }>)
+          .map(
+            (row) =>
+              `<li><strong>${esc(row.dimension)}:</strong> ${row.rawScore.toFixed(2)}/10 | weight ${(row.weight * 100).toFixed(0)}% | weighted ${row.weightedScore.toFixed(2)} - ${esc(row.justification)}</li>`
+          )
+          .join("");
+
+        return `
       <section>
         <h3>${esc(candidate.name)} (${candidate.overallScore}/100)</h3>
         <p><strong>Recommendation:</strong> ${esc(candidate.recommendation)} | <strong>Status:</strong> ${esc(candidate.status)}</p>
         <p><strong>Current Role:</strong> ${esc(candidate.currentTitle ?? "N/A")} | <strong>Experience:</strong> ${candidate.experienceYears} years</p>
         <p><strong>Strengths:</strong> ${esc((candidate.strengths as string[]).join(", ") || "N/A")}</p>
         <p><strong>Gaps:</strong> ${esc((candidate.gaps as string[]).join(", ") || "N/A")}</p>
+        <p><strong>Dimension Breakdown:</strong></p>
+        <ul>${dimensionRows || "<li>No score breakdown recorded.</li>"}</ul>
       </section>
       `
+      }
     )
     .join("");
 

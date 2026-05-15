@@ -34,6 +34,8 @@ export async function GET(
       organizationId: user.organizationId,
     },
     include: {
+      resumeDocuments: true,
+      linkedInProfiles: true,
       applications: {
         include: {
           job: true,

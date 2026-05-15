@@ -7,6 +7,9 @@ const prisma = new PrismaClient();
 
 async function resetDatabase() {
   await prisma.recruiterReview.deleteMany();
+  await prisma.scoreBreakdown.deleteMany();
+  await prisma.resumeDocument.deleteMany();
+  await prisma.linkedInProfileData.deleteMany();
   await prisma.applicationEvaluation.deleteMany();
   await prisma.report.deleteMany();
   await prisma.candidate.deleteMany();

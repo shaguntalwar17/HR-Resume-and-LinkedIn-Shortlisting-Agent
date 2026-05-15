@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-
+import { Progress } from "@/components/ui/progress";
 type EvaluationRecord = {
   id: string;
   overallScore: number;
@@ -24,7 +24,16 @@ type EvaluationRecord = {
     missingSkills?: string[];
     recommendationReason?: Record<string, string>;
   };
-  evidenceJson?: Record<string, string>;
+  scoreBreakdowns?: Array<{
+    id: string;
+    dimension: string;
+    weight: number;
+    rawScore: number;
+    weightedScore: number;
+    justification: string;
+    evidenceJson?: string[] | null;
+  }>;
+  evidenceJson?: Record<string, string | string[]>;
   riskFlagsJson?: { flags?: string[] };
   candidate: {
     fullName: string;
@@ -42,6 +51,8 @@ type EvaluationRecord = {
     createdAt: string;
     reviewer?: { name?: string | null };
   }>;
+  assignedHiringManagerId?: string | null;
+  assignedHiringManager?: { id: string; name?: string | null } | null;
 };
 
 interface EvaluationDetailModalProps {
@@ -52,28 +63,48 @@ interface EvaluationDetailModalProps {
 }
 
 export function EvaluationDetailModal({ open, onClose, evaluation, onChanged }: EvaluationDetailModalProps) {
-  const [status, setStatus] = useState("REVIEWED");
-  const [recommendation, setRecommendation] = useState("SHORTLIST");
+  const [status, setStatus] = useState(evaluation?.status ?? "REVIEWED");
+  const [recommendation, setRecommendation] = useState(evaluation?.recommendation ?? "SHORTLIST");
   const [reviewDecision, setReviewDecision] = useState("COMMENT");
   const [note, setNote] = useState("");
   const [overrideReason, setOverrideReason] = useState("");
   const [manualScore, setManualScore] = useState("");
   const [busy, setBusy] = useState(false);
+  const [hiringManagers, setHiringManagers] = useState<Array<{ id: string; name: string }>>([]);
+  const [assignedHiringManagerId, setAssignedHiringManagerId] = useState(
+    evaluation?.assignedHiringManagerId ?? ""
+  );
+
+  useEffect(() => {
+    if (!open) return;
+
+    void (async () => {
+      const response = await fetch("/api/users");
+      if (!response.ok) return;
+      const data = (await response.json()) as {
+        users?: Array<{ id: string; name: string; role: string }>;
+      };
+      const managers = (data.users ?? [])
+        .filter((user) => user.role === "HIRING_MANAGER")
+        .map((user) => ({ id: user.id, name: user.name }));
+      setHiringManagers(managers);
+    })();
+  }, [open]);
 
   if (!evaluation) return null;
 
   async function updateStatus() {
-    const evaluationId = evaluation?.id;
-    if (!evaluationId) return;
+    if (!evaluation) return;
     setBusy(true);
     try {
-      const response = await fetch(`/api/evaluations/${evaluationId}/status`, {
+      const response = await fetch(`/api/evaluations/${evaluation.id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           status,
           recommendation,
           notes: note || undefined,
+          assignHiringManagerId: assignedHiringManagerId || undefined,
         }),
       });
       const data = await response.json();
@@ -89,11 +120,10 @@ export function EvaluationDetailModal({ open, onClose, evaluation, onChanged }: 
   }
 
   async function createReview() {
-    const evaluationId = evaluation?.id;
-    if (!evaluationId) return;
+    if (!evaluation) return;
     setBusy(true);
     try {
-      const response = await fetch(`/api/evaluations/${evaluationId}/review`, {
+      const response = await fetch(`/api/evaluations/${evaluation.id}/review`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -116,15 +146,15 @@ export function EvaluationDetailModal({ open, onClose, evaluation, onChanged }: 
   }
 
   async function overrideEvaluation() {
-    const evaluationId = evaluation?.id;
-    if (!evaluationId) return;
+    if (!evaluation) return;
     if (!overrideReason.trim()) {
       toast.error("Override reason is required.");
       return;
     }
+
     setBusy(true);
     try {
-      const response = await fetch(`/api/evaluations/${evaluationId}/override`, {
+      const response = await fetch(`/api/evaluations/${evaluation.id}/override`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -163,21 +193,37 @@ export function EvaluationDetailModal({ open, onClose, evaluation, onChanged }: 
               </p>
               <p>{evaluation.explanationJson?.summary ?? "No summary available."}</p>
               <p>
-                <strong>Matched Skills:</strong>{" "}
-                {(evaluation.explanationJson?.matchedSkills ?? []).join(", ") || "N/A"}
+                <strong>Matched Skills:</strong> {(evaluation.explanationJson?.matchedSkills ?? []).join(", ") || "N/A"}
               </p>
               <p>
-                <strong>Missing Skills:</strong>{" "}
-                {(evaluation.explanationJson?.missingSkills ?? []).join(", ") || "N/A"}
+                <strong>Missing Skills:</strong> {(evaluation.explanationJson?.missingSkills ?? []).join(", ") || "N/A"}
               </p>
+
+              <div className="rounded-xl border border-slate-200/60 p-5 bg-white/80 shadow-sm backdrop-blur-sm">
+                <p className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4">Mandatory Rubric Breakdown</p>
+                <div className="space-y-5">
+                  {(evaluation.scoreBreakdowns ?? []).map((row) => (
+                    <div key={row.id} className="space-y-2">
+                      <div className="flex justify-between items-center text-sm font-bold text-slate-800">
+                        <span>{row.dimension} <span className="text-slate-400 font-medium text-xs ml-1">(weight {(row.weight * 100).toFixed(0)}%)</span></span>
+                        <span>{row.rawScore.toFixed(1)} / 10</span>
+                      </div>
+                      <Progress value={row.rawScore * 10} max={100} indicatorClassName={row.rawScore >= 8 ? "bg-emerald-500" : row.rawScore >= 5 ? "bg-blue-500" : "bg-rose-500"} />
+                      <p className="text-xs text-slate-600 mt-1 leading-relaxed">{row.justification}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className="rounded-lg border border-slate-200 p-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Evidence Snippets</p>
                 {Object.entries(evaluation.evidenceJson ?? {}).map(([key, value]) => (
                   <p key={key} className="mt-1 text-sm text-slate-700">
-                    <strong>{key}:</strong> {value}
+                    <strong>{key}:</strong> {Array.isArray(value) ? value.join(" | ") : value}
                   </p>
                 ))}
               </div>
+
               <div className="rounded-lg border border-slate-200 p-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Risk Flags</p>
                 {(evaluation.riskFlagsJson?.flags ?? []).length ? (
@@ -218,10 +264,24 @@ export function EvaluationDetailModal({ open, onClose, evaluation, onChanged }: 
                   <option value="PARSED">PARSED</option>
                   <option value="EVALUATED">EVALUATED</option>
                   <option value="REVIEWED">REVIEWED</option>
+                  <option value="SENT_TO_HIRING_MANAGER">SENT_TO_HIRING_MANAGER</option>
                   <option value="SHORTLISTED">SHORTLISTED</option>
                   <option value="REJECTED">REJECTED</option>
                   <option value="HOLD">HOLD</option>
                   <option value="HIRED">HIRED</option>
+                </Select>
+              </Field>
+              <Field label="Assign Hiring Manager">
+                <Select
+                  value={assignedHiringManagerId}
+                  onChange={(event) => setAssignedHiringManagerId(event.target.value)}
+                >
+                  <option value="">Unassigned</option>
+                  {hiringManagers.map((manager) => (
+                    <option key={manager.id} value={manager.id}>
+                      {manager.name}
+                    </option>
+                  ))}
                 </Select>
               </Field>
               <Field label="Recommendation">
@@ -256,10 +316,7 @@ export function EvaluationDetailModal({ open, onClose, evaluation, onChanged }: 
                 />
               </Field>
               <Field label="Override Reason">
-                <Textarea
-                  value={overrideReason}
-                  onChange={(event) => setOverrideReason(event.target.value)}
-                />
+                <Textarea value={overrideReason} onChange={(event) => setOverrideReason(event.target.value)} />
               </Field>
               <Button variant="warning" onClick={overrideEvaluation} disabled={busy}>
                 Apply Override

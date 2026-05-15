@@ -3,6 +3,20 @@ import { getServerEnv } from "@/lib/config/server-env";
 
 let ensurePromise: Promise<void> | null = null;
 
+type SqliteTableInfoRow = {
+  name?: string;
+};
+
+async function ensureColumnExists(table: string, column: string, definitionSql: string) {
+  const rows = await prisma.$queryRawUnsafe<SqliteTableInfoRow[]>(`PRAGMA table_info("${table}");`);
+  const exists = rows.some((row) => row.name === column);
+  if (exists) return;
+
+  await prisma.$executeRawUnsafe(
+    `ALTER TABLE "${table}" ADD COLUMN "${column}" ${definitionSql};`
+  );
+}
+
 async function applySchema() {
   const env = getServerEnv();
   if (!env.AUTO_BOOTSTRAP_SCHEMA) {
@@ -49,12 +63,19 @@ async function applySchema() {
       "employmentType" TEXT,
       "seniority" TEXT,
       "description" TEXT NOT NULL,
+      "salaryMin" INTEGER,
+      "salaryMax" INTEGER,
       "requiredSkills" JSONB NOT NULL,
       "preferredSkills" JSONB NOT NULL,
+      "responsibilities" JSONB,
+      "qualifications" JSONB,
+      "certifications" JSONB,
       "minExperience" INTEGER NOT NULL DEFAULT 0,
       "maxExperience" INTEGER,
       "status" TEXT NOT NULL DEFAULT 'DRAFT',
       "scoringConfig" JSONB,
+      "knockoutCriteria" JSONB,
+      "jdParsedJson" JSONB,
       "createdById" TEXT NOT NULL,
       "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -127,6 +148,46 @@ async function applySchema() {
   await prisma.$executeRawUnsafe(`
     CREATE UNIQUE INDEX IF NOT EXISTS "ApplicationEvaluation_jobId_candidateId_key"
     ON "ApplicationEvaluation"("jobId", "candidateId");
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "ScoreBreakdown" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "evaluationId" TEXT NOT NULL,
+      "dimension" TEXT NOT NULL,
+      "weight" REAL NOT NULL,
+      "rawScore" REAL NOT NULL,
+      "weightedScore" REAL NOT NULL,
+      "justification" TEXT NOT NULL,
+      "evidenceJson" JSONB,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY ("evaluationId") REFERENCES "ApplicationEvaluation"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    );
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "ResumeDocument" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "candidateId" TEXT NOT NULL,
+      "fileName" TEXT NOT NULL,
+      "mimeType" TEXT NOT NULL,
+      "sizeBytes" INTEGER NOT NULL,
+      "storageUrl" TEXT NOT NULL,
+      "parsedText" TEXT NOT NULL,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY ("candidateId") REFERENCES "Candidate"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    );
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "LinkedInProfileData" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "candidateId" TEXT NOT NULL,
+      "payloadJson" JSONB NOT NULL,
+      "source" TEXT,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY ("candidateId") REFERENCES "Candidate"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    );
   `);
 
   await prisma.$executeRawUnsafe(`
@@ -223,6 +284,14 @@ async function applySchema() {
       FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE
     );
   `);
+
+  await ensureColumnExists("JobRequisition", "salaryMin", "INTEGER");
+  await ensureColumnExists("JobRequisition", "salaryMax", "INTEGER");
+  await ensureColumnExists("JobRequisition", "responsibilities", "JSONB");
+  await ensureColumnExists("JobRequisition", "qualifications", "JSONB");
+  await ensureColumnExists("JobRequisition", "certifications", "JSONB");
+  await ensureColumnExists("JobRequisition", "knockoutCriteria", "JSONB");
+  await ensureColumnExists("JobRequisition", "jdParsedJson", "JSONB");
 }
 
 export async function ensureDatabaseSchema() {

@@ -158,14 +158,11 @@ export async function bootstrapDemoDataIfEmpty(prisma: PrismaClient) {
     data: {
       organizationId: organization.id,
       defaultWeights: {
-        mandatorySkills: 0.25,
-        preferredSkills: 0.1,
-        experience: 0.2,
-        domain: 0.1,
-        education: 0.1,
-        projects: 0.1,
-        communication: 0.08,
-        semantic: 0.07,
+        skillsMatch: 0.3,
+        experienceRelevance: 0.25,
+        educationCerts: 0.15,
+        projectPortfolio: 0.2,
+        communicationQuality: 0.1,
       },
       minimumScoreThreshold: 70,
       knockoutCriteria: {
@@ -190,12 +187,22 @@ export async function bootstrapDemoDataIfEmpty(prisma: PrismaClient) {
           employmentType: "Full-time",
           seniority: index === 0 ? "Senior" : "Mid-Senior",
           description: parsed.rawText,
+          salaryMin: index === 0 ? 2200000 : 1800000,
+          salaryMax: index === 0 ? 4200000 : 3600000,
           requiredSkills: parsed.requiredSkills,
           preferredSkills: parsed.preferredSkills,
+          responsibilities: parsed.responsibilities,
+          qualifications: parsed.educationRequirements,
+          certifications: parsed.certifications,
           minExperience: parsed.minimumExperienceYears,
           maxExperience: index === 0 ? 10 : 12,
           status: "ACTIVE",
           createdById: recruiter.id,
+          knockoutCriteria: {
+            minimumMandatorySkillMatchPercentage: 35,
+            minimumExperienceYears: parsed.minimumExperienceYears,
+          },
+          jdParsedJson: JSON.parse(JSON.stringify(parsed)),
           scoringConfig: {
             minimumScoreThreshold: index === 0 ? 72 : 70,
           },
@@ -231,13 +238,14 @@ export async function bootstrapDemoDataIfEmpty(prisma: PrismaClient) {
           knockoutCriteria: { minimumMandatorySkillMatchPercentage: 35 },
         },
       });
+      const { scoreBreakdown, ...persistableScore } = score;
 
       const statusOverride =
-        score.overallScore >= 85
+        persistableScore.overallScore >= 85
           ? "SHORTLISTED"
-          : score.overallScore >= 70
-            ? "REVIEWED"
-            : score.overallScore >= 55
+          : persistableScore.overallScore >= 70
+            ? "SENT_TO_HIRING_MANAGER"
+            : persistableScore.overallScore >= 55
               ? "HOLD"
               : "REJECTED";
 
@@ -245,23 +253,39 @@ export async function bootstrapDemoDataIfEmpty(prisma: PrismaClient) {
         data: {
           jobId: job.id,
           candidateId: candidate.id,
-          ...score,
+          ...persistableScore,
           status: statusOverride,
           assignedHiringManagerId:
-            statusOverride === "REVIEWED" || statusOverride === "SHORTLISTED" ? manager.id : null,
+            statusOverride === "SENT_TO_HIRING_MANAGER" || statusOverride === "SHORTLISTED"
+              ? manager.id
+              : null,
         },
       });
 
-      if (statusOverride === "SHORTLISTED" || statusOverride === "REVIEWED") {
+      if (scoreBreakdown.length) {
+        await prisma.scoreBreakdown.createMany({
+          data: scoreBreakdown.map((entry) => ({
+            evaluationId: application.id,
+            dimension: entry.dimension,
+            weight: entry.weight,
+            rawScore: entry.rawScore,
+            weightedScore: entry.weightedScore,
+            justification: entry.justification,
+            evidenceJson: entry.evidence,
+          })),
+        });
+      }
+
+      if (statusOverride === "SHORTLISTED" || statusOverride === "SENT_TO_HIRING_MANAGER") {
         await prisma.recruiterReview.create({
           data: {
             applicationId: application.id,
             reviewerId: recruiter.id,
-            decision: statusOverride === "SHORTLISTED" ? "SHORTLIST" : "COMMENT",
+            decision: statusOverride === "SHORTLISTED" ? "APPROVE" : "SHORTLIST",
             notes:
               statusOverride === "SHORTLISTED"
-                ? "Promising candidate profile for hiring manager loop."
-                : "Needs manager review before final shortlist.",
+                ? "Approved for final shortlist stage after recruiter and manager alignment."
+                : "Shared with hiring manager for collaborative review before final shortlist.",
           },
         });
       }

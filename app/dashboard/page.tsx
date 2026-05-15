@@ -107,7 +107,17 @@ export default function DashboardPage() {
   }, [applications, candidates.length, jobs]);
 
   const statusFunnel = useMemo(() => {
-    const order = ["NEW", "PARSED", "EVALUATED", "REVIEWED", "SHORTLISTED", "REJECTED", "HOLD", "HIRED"];
+    const order = [
+      "NEW",
+      "PARSED",
+      "EVALUATED",
+      "REVIEWED",
+      "SENT_TO_HIRING_MANAGER",
+      "SHORTLISTED",
+      "REJECTED",
+      "HOLD",
+      "HIRED",
+    ];
     return order.map((status) => ({
       status,
       count: applications.filter((application) => application.status === status).length,

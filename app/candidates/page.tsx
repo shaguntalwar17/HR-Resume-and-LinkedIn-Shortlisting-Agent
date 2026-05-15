@@ -23,6 +23,14 @@ type Candidate = {
   updatedAt: string;
 };
 
+type CandidateTimelineEvent = {
+  id: string;
+  action: string;
+  entityType: string;
+  createdAt: string;
+  actor?: { name?: string | null } | null;
+};
+
 export default function CandidatesPage() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,6 +40,9 @@ export default function CandidatesPage() {
   const [search, setSearch] = useState("");
   const [skillFilter, setSkillFilter] = useState("");
   const [progressMessage, setProgressMessage] = useState("");
+  const [activeTimelineCandidateId, setActiveTimelineCandidateId] = useState<string | null>(null);
+  const [timelineEvents, setTimelineEvents] = useState<CandidateTimelineEvent[]>([]);
+  const [timelineBusy, setTimelineBusy] = useState(false);
 
   async function fetchCandidates(options?: { showLoading?: boolean }) {
     if (options?.showLoading ?? true) {
@@ -116,6 +127,29 @@ export default function CandidatesPage() {
     });
   }, [candidates, search, skillFilter]);
 
+  async function loadTimeline(candidateId: string) {
+    if (activeTimelineCandidateId === candidateId) {
+      setActiveTimelineCandidateId(null);
+      setTimelineEvents([]);
+      return;
+    }
+
+    setTimelineBusy(true);
+    try {
+      const response = await fetch(`/api/candidates/${candidateId}/timeline`);
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to load candidate timeline.");
+      }
+      setActiveTimelineCandidateId(candidateId);
+      setTimelineEvents(data.events ?? []);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to load timeline.");
+    } finally {
+      setTimelineBusy(false);
+    }
+  }
+
   return (
     <div className="grid gap-5 xl:grid-cols-3">
       <Card className="xl:col-span-1">
@@ -197,6 +231,33 @@ export default function CandidatesPage() {
                     <Badge key={`${candidate.id}-${skill}`}>{skill}</Badge>
                   ))}
                 </div>
+                <div className="mt-3">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => loadTimeline(candidate.id)}
+                    disabled={timelineBusy && activeTimelineCandidateId !== candidate.id}
+                  >
+                    {activeTimelineCandidateId === candidate.id ? "Hide Timeline" : "View Timeline"}
+                  </Button>
+                </div>
+                {activeTimelineCandidateId === candidate.id ? (
+                  <div className="mt-3 space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Candidate Timeline
+                    </p>
+                    {timelineEvents.length ? (
+                      timelineEvents.slice(0, 10).map((event) => (
+                        <p key={event.id} className="text-xs text-slate-700">
+                          {new Date(event.createdAt).toLocaleString()} - {event.action} ({event.entityType}) by{" "}
+                          {event.actor?.name ?? "System"}
+                        </p>
+                      ))
+                    ) : (
+                      <p className="text-xs text-slate-500">No timeline events recorded yet.</p>
+                    )}
+                  </div>
+                ) : null}
               </div>
             ))
           ) : (

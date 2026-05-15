@@ -7,40 +7,79 @@ export const applicationStatusSchema = z.enum([
   "PARSED",
   "EVALUATED",
   "REVIEWED",
+  "SENT_TO_HIRING_MANAGER",
   "SHORTLISTED",
   "REJECTED",
   "HOLD",
   "HIRED",
 ]);
 
-export const createJobSchema = z.object({
-  title: z.string().min(3),
-  department: z.string().optional(),
-  location: z.string().optional(),
-  employmentType: z.string().optional(),
-  seniority: z.string().optional(),
-  description: z.string().min(20),
-  requiredSkills: z.array(z.string()).default([]),
-  preferredSkills: z.array(z.string()).default([]),
-  minExperience: z.number().int().nonnegative().default(0),
-  maxExperience: z.number().int().nonnegative().optional(),
-  status: jobStatusSchema.default("DRAFT"),
-  scoringConfig: z
-    .object({
-      weights: z.record(z.string(), z.number()).optional(),
-      minimumScoreThreshold: z.number().int().min(0).max(100).optional(),
-      knockoutCriteria: z
-        .object({
-          minimumMandatorySkillMatchPercentage: z.number().min(0).max(100).optional(),
-          minimumExperienceYears: z.number().nonnegative().optional(),
-          rejectOnMissingMandatorySkillsCount: z.number().int().nonnegative().optional(),
-        })
-        .optional(),
-    })
-    .optional(),
-});
+const baseJobSchema = z.object({
+    title: z.string().min(3),
+    department: z.string().optional(),
+    location: z.string().optional(),
+    employmentType: z.string().optional(),
+    seniority: z.string().optional(),
+    description: z.string().min(20),
+    salaryMin: z.number().int().nonnegative().optional(),
+    salaryMax: z.number().int().nonnegative().optional(),
+    requiredSkills: z.array(z.string()).default([]),
+    preferredSkills: z.array(z.string()).default([]),
+    responsibilities: z.array(z.string()).default([]),
+    qualifications: z.array(z.string()).default([]),
+    certifications: z.array(z.string()).default([]),
+    minExperience: z.number().int().nonnegative().default(0),
+    maxExperience: z.number().int().nonnegative().optional(),
+    status: jobStatusSchema.default("DRAFT"),
+    knockoutCriteria: z
+      .object({
+        minimumMandatorySkillMatchPercentage: z.number().min(0).max(100).optional(),
+        minimumExperienceYears: z.number().nonnegative().optional(),
+        rejectOnMissingMandatorySkillsCount: z.number().int().nonnegative().optional(),
+      })
+      .optional(),
+    scoringConfig: z
+      .object({
+        weights: z.record(z.string(), z.number()).optional(),
+        minimumScoreThreshold: z.number().int().min(0).max(100).optional(),
+        knockoutCriteria: z
+          .object({
+            minimumMandatorySkillMatchPercentage: z.number().min(0).max(100).optional(),
+            minimumExperienceYears: z.number().nonnegative().optional(),
+            rejectOnMissingMandatorySkillsCount: z.number().int().nonnegative().optional(),
+          })
+          .optional(),
+      })
+      .optional(),
+  });
 
-export const updateJobSchema = createJobSchema.partial();
+export const createJobSchema = baseJobSchema
+  .superRefine((payload, ctx) => {
+    if (
+      payload.salaryMin !== undefined &&
+      payload.salaryMax !== undefined &&
+      payload.salaryMax < payload.salaryMin
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "salaryMax cannot be less than salaryMin.",
+        path: ["salaryMax"],
+      });
+    }
+
+    if (
+      payload.maxExperience !== undefined &&
+      payload.maxExperience < payload.minExperience
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "maxExperience cannot be less than minExperience.",
+        path: ["maxExperience"],
+      });
+    }
+  });
+
+export const updateJobSchema = baseJobSchema.partial();
 
 export const listCandidatesQuerySchema = z.object({
   jobId: z.string().optional(),

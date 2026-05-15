@@ -61,6 +61,7 @@ export async function POST(
             }
           : undefined,
       });
+      const { scoreBreakdown, ...persistableScore } = score;
 
       const existingApplication = await prisma.applicationEvaluation.findUnique({
         where: { jobId_candidateId: { jobId: job.id, candidateId: candidate.id } },
@@ -70,7 +71,7 @@ export async function POST(
         ? await prisma.applicationEvaluation.update({
             where: { id: existingApplication.id },
             data: {
-              ...score,
+              ...persistableScore,
               status: "EVALUATED",
             },
           })
@@ -78,10 +79,27 @@ export async function POST(
             data: {
               jobId: job.id,
               candidateId: candidate.id,
-              ...score,
+              ...persistableScore,
               status: "EVALUATED",
             },
           });
+
+      await prisma.scoreBreakdown.deleteMany({
+        where: { evaluationId: application.id },
+      });
+      if (scoreBreakdown.length) {
+        await prisma.scoreBreakdown.createMany({
+          data: scoreBreakdown.map((entry) => ({
+            evaluationId: application.id,
+            dimension: entry.dimension,
+            weight: entry.weight,
+            rawScore: entry.rawScore,
+            weightedScore: entry.weightedScore,
+            justification: entry.justification,
+            evidenceJson: entry.evidence,
+          })),
+        });
+      }
 
       evaluationResults.push(application);
     }

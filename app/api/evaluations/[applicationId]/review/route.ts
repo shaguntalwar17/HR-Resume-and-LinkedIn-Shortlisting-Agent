@@ -49,11 +49,13 @@ export async function POST(
 
     const updatedStatus =
       payload.decision === "SHORTLIST"
-        ? "REVIEWED"
+        ? "SENT_TO_HIRING_MANAGER"
         : payload.decision === "REJECT"
           ? "REJECTED"
           : payload.decision === "HOLD"
             ? "HOLD"
+            : payload.decision === "APPROVE"
+              ? "SHORTLISTED"
             : "REVIEWED";
 
     const updatedApplication = await prisma.applicationEvaluation.update({

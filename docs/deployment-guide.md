@@ -13,6 +13,11 @@ Why:
 - SQLite must persist to disk across restarts.
 - Resume files must persist outside ephemeral containers.
 
+For larger HR org workloads:
+- move Prisma datasource to managed PostgreSQL,
+- keep file storage on managed blob/object storage,
+- keep Next.js app on Vercel/Render/Railway with stateless app instances.
+
 ## 2. Required Environment Variables
 Set these in your deployment platform:
 

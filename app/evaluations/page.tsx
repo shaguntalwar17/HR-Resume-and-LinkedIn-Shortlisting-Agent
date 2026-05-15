@@ -36,6 +36,14 @@ type EvaluationRecord = {
   riskFlagsJson?: {
     flags?: string[];
   };
+  scoreBreakdowns?: Array<{
+    id: string;
+    dimension: string;
+    weight: number;
+    rawScore: number;
+    weightedScore: number;
+    justification: string;
+  }>;
   reviews: Array<{
     id: string;
     decision: string;
@@ -45,6 +53,10 @@ type EvaluationRecord = {
     reviewer?: { name?: string | null };
   }>;
   confidenceScore: number;
+  assignedHiringManager?: {
+    id: string;
+    name: string;
+  } | null;
 };
 
 type Job = {
@@ -224,6 +236,7 @@ export default function EvaluationsPage() {
               <option value="EVALUATED">EVALUATED</option>
               <option value="REVIEWED">REVIEWED</option>
               <option value="SHORTLISTED">SHORTLISTED</option>
+              <option value="SENT_TO_HIRING_MANAGER">SENT_TO_HIRING_MANAGER</option>
               <option value="REJECTED">REJECTED</option>
               <option value="HOLD">HOLD</option>
               <option value="HIRED">HIRED</option>
@@ -237,6 +250,7 @@ export default function EvaluationsPage() {
             <Select value={bulkStatus} onChange={(event) => setBulkStatus(event.target.value)}>
               <option value="REVIEWED">REVIEWED</option>
               <option value="SHORTLISTED">SHORTLISTED</option>
+              <option value="SENT_TO_HIRING_MANAGER">SENT_TO_HIRING_MANAGER</option>
               <option value="REJECTED">REJECTED</option>
               <option value="HOLD">HOLD</option>
               <option value="HIRED">HIRED</option>
@@ -276,6 +290,7 @@ export default function EvaluationsPage() {
                   <TableHead>Matched Skills</TableHead>
                   <TableHead>Missing Skills</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Assigned HM</TableHead>
                   <TableHead>Updated</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -302,10 +317,21 @@ export default function EvaluationsPage() {
                       {(application.explanationJson?.missingSkills ?? []).slice(0, 3).join(", ") || "N/A"}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={application.status === "SHORTLISTED" ? "success" : application.status === "REJECTED" ? "danger" : "default"}>
+                      <Badge
+                        variant={
+                          application.status === "SHORTLISTED"
+                            ? "success"
+                            : application.status === "REJECTED"
+                              ? "danger"
+                              : application.status === "SENT_TO_HIRING_MANAGER"
+                                ? "warning"
+                                : "default"
+                        }
+                      >
                         {application.status}
                       </Badge>
                     </TableCell>
+                    <TableCell>{application.assignedHiringManager?.name ?? "Unassigned"}</TableCell>
                     <TableCell>{new Date(application.updatedAt).toLocaleDateString()}</TableCell>
                     <TableCell>
                       <Button size="sm" variant="secondary" onClick={() => setActiveId(application.id)}>
@@ -321,6 +347,7 @@ export default function EvaluationsPage() {
       </Card>
 
       <EvaluationDetailModal
+        key={activeId ?? "closed"}
         open={Boolean(activeId)}
         onClose={() => setActiveId(null)}
         evaluation={selectedApplication}

@@ -24,6 +24,19 @@ export async function PATCH(
     const body = await request.json();
     const payload = applicationStatusUpdateSchema.parse(body);
 
+    if (payload.assignHiringManagerId) {
+      const manager = await prisma.user.findFirst({
+        where: {
+          id: payload.assignHiringManagerId,
+          organizationId: user.organizationId,
+          role: "HIRING_MANAGER",
+        },
+      });
+      if (!manager) {
+        return NextResponse.json({ error: "Assigned hiring manager is invalid." }, { status: 400 });
+      }
+    }
+
     const existing = await prisma.applicationEvaluation.findFirst({
       where: {
         id: applicationId,
@@ -35,10 +48,15 @@ export async function PATCH(
       return NextResponse.json({ error: "Application evaluation not found." }, { status: 404 });
     }
 
+    const resolvedStatus =
+      payload.assignHiringManagerId && payload.status === "REVIEWED"
+        ? "SENT_TO_HIRING_MANAGER"
+        : payload.status;
+
     const updated = await prisma.applicationEvaluation.update({
       where: { id: existing.id },
       data: {
-        status: payload.status,
+        status: resolvedStatus,
         recommendation: payload.recommendation ?? existing.recommendation,
         assignedHiringManagerId: payload.assignHiringManagerId ?? existing.assignedHiringManagerId,
       },

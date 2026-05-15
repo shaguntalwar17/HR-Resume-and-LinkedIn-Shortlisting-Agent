@@ -46,6 +46,16 @@ export async function POST(request: NextRequest) {
         const created = await prisma.candidate.create({
           data: mapParsedCandidateToDb(parsed, user.organizationId, resumeUrl),
         });
+        await prisma.resumeDocument.create({
+          data: {
+            candidateId: created.id,
+            fileName: value.name,
+            mimeType: value.type || "application/octet-stream",
+            sizeBytes: value.size,
+            storageUrl: resumeUrl,
+            parsedText: text,
+          },
+        });
         createdCandidates.push(mapCandidate(created));
       } catch (error) {
         failedFiles.push({
@@ -63,6 +73,13 @@ export async function POST(request: NextRequest) {
           data: {
             ...mapParsedCandidateToDb(parsed, user.organizationId),
             linkedInJson: profile as Prisma.InputJsonValue,
+          },
+        });
+        await prisma.linkedInProfileData.create({
+          data: {
+            candidateId: created.id,
+            payloadJson: profile as Prisma.InputJsonValue,
+            source: "manual_json",
           },
         });
         createdCandidates.push(mapCandidate(created));

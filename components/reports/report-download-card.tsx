@@ -1,20 +1,62 @@
 "use client";
 
-import { Download, FileCode2, FileJson2, FileText } from "lucide-react";
+import { useState } from "react";
+import { Download, FileCode2, FileJson2, FileText, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface ReportDownloadCardProps {
-  runId: string;
+  runId?: string; // Kept for backwards compatibility just in case, but unused
+  jobId?: string;
 }
 
-export function ReportDownloadCard({ runId }: ReportDownloadCardProps) {
-  const reportLinks = [
-    { label: "Download JSON Report", href: `/api/reports/json?runId=${runId}`, icon: FileJson2 },
-    { label: "Download HTML Report", href: `/api/reports/html?runId=${runId}`, icon: FileCode2 },
-    { label: "Download PDF Report", href: `/api/reports/pdf?runId=${runId}`, icon: FileText },
-  ];
+export function ReportDownloadCard({ jobId }: ReportDownloadCardProps) {
+  const [downloadingType, setDownloadingType] = useState<string | null>(null);
+
+  const reportTypes = [
+    { value: "JSON", label: "JSON", icon: FileJson2 },
+    { value: "HTML", label: "HTML", icon: FileCode2 },
+    { value: "PDF", label: "PDF", icon: FileText },
+  ] as const;
+
+  async function downloadReport(type: "JSON" | "HTML" | "PDF") {
+    if (!jobId) {
+      toast.error("Job ID is required to generate reports.");
+      return;
+    }
+    
+    setDownloadingType(type);
+    try {
+      const response = await fetch("/api/reports/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jobId, type }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error ?? "Report generation failed.");
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const extension = type.toLowerCase();
+      link.download = `hirewise-report-${jobId}.${extension}`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      toast.success(`${type} report downloaded.`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Report download failed.");
+    } finally {
+      setDownloadingType(null);
+    }
+  }
 
   return (
     <Card>
@@ -23,18 +65,26 @@ export function ReportDownloadCard({ runId }: ReportDownloadCardProps) {
         <CardDescription>Download full evaluation artifacts for audit and sharing.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        {reportLinks.map((item) => {
-          const Icon = item.icon;
+        {reportTypes.map((entry) => {
+          const Icon = entry.icon;
           return (
-            <a key={item.href} href={item.href}>
-              <Button className="w-full justify-between" variant="secondary">
-                <span className="inline-flex items-center gap-2">
-                  <Icon className="h-4 w-4" />
-                  {item.label}
-                </span>
+            <Button 
+              key={entry.value} 
+              className="w-full justify-between" 
+              variant="secondary"
+              onClick={() => downloadReport(entry.value)}
+              disabled={!jobId || downloadingType !== null}
+            >
+              <span className="inline-flex items-center gap-2">
+                <Icon className="h-4 w-4" />
+                Download {entry.label} Report
+              </span>
+              {downloadingType === entry.value ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
                 <Download className="h-4 w-4" />
-              </Button>
-            </a>
+              )}
+            </Button>
           );
         })}
       </CardContent>

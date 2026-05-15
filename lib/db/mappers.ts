@@ -5,12 +5,22 @@ function parseStringArray(value: unknown): string[] {
   return value.map((item) => String(item)).filter(Boolean);
 }
 
+function parseObject(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return value as Record<string, unknown>;
+}
+
 export function mapJob(job: JobRequisition) {
   return {
     ...job,
     requiredSkills: parseStringArray(job.requiredSkills),
     preferredSkills: parseStringArray(job.preferredSkills),
+    responsibilities: parseStringArray(job.responsibilities),
+    qualifications: parseStringArray(job.qualifications),
+    certifications: parseStringArray(job.certifications),
     scoringConfig: (job.scoringConfig ?? null) as Record<string, unknown> | null,
+    knockoutCriteria: parseObject(job.knockoutCriteria),
+    jdParsedJson: parseObject(job.jdParsedJson),
   };
 }
 
