@@ -1,4 +1,4 @@
-# 🚀 HireWise AI: HR Resume & LinkedIn Shortlisting Agent
+#  HireWise AI: HR Resume & LinkedIn Shortlisting Agent
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -13,30 +13,30 @@ By eliminating manual screening fatigue and introducing deep semantic matching, 
 
 ---
 
-## ✨ Key Features & Capabilities
+##  Key Features & Capabilities
 
-### 🔐 Enterprise-Grade Access & Security
+###  Enterprise-Grade Access & Security
 - **Role-Based Access Control (RBAC):** Distinct workflows for `ADMIN`, `RECRUITER`, `HIRING_MANAGER`, and `VIEWER`.
 - **Organization-Scoped Data:** Multi-tenant architecture ensuring isolated candidate and job data.
 - **Responsible AI Guardrails:** System strictly ignores protected attributes (gender, age, marital status, religion) to ensure bias-free screening.
 - **Full Audit Logging:** Every profile update, score override, and status change is immutably logged.
 
-### 📄 Intelligent Data Ingestion
+###  Intelligent Data Ingestion
 - **Robust Resume Parsing:** Extracts structured data from PDF and DOCX files securely.
 - **LinkedIn Enrichment:** Supports importing JSON-formatted LinkedIn profile data to enrich candidate records.
 - **Advanced Job Requisitions:** Capture complex criteria including salary ranges, required/preferred skills, certifications, and hard knockout constraints.
 
-### 🧠 Advanced Scoring Engine
+###  Advanced Scoring Engine
 - **5-Dimensional Rubric:** Candidates are evaluated across:
-  - 🛠️ *Skills Match* (30%)
-  - 🏢 *Experience Relevance* (25%)
-  - 🎓 *Education & Certifications* (15%)
-  - 🚀 *Projects & Portfolio* (20%)
-  - 💬 *Communication Quality* (10%)
+  -  *Skills Match* (30%)
+  -  *Experience Relevance* (25%)
+  -  *Education & Certifications* (15%)
+  -  *Projects & Portfolio* (20%)
+  -  *Communication Quality* (10%)
 - **Deterministic & Semantic Fallbacks:** Combines exact-match heuristics with semantic evaluation.
 - **Explainable AI:** Generates one-line human-readable justifications for every dimension score.
 
-### 📊 Recruiter Workflows & Reporting
+###  Recruiter Workflows & Reporting
 - **Interactive Shortlisting:** Rank candidates as `STRONG_SHORTLIST`, `SHORTLIST`, `HOLD`, or `REJECT`.
 - **Hiring Manager Handoff:** Dedicated assignment state (`SENT_TO_HIRING_MANAGER`) for internal team review.
 - **Human Overrides:** Recruiters can override AI scores (with mandatory justification).
@@ -45,7 +45,7 @@ By eliminating manual screening fatigue and introducing deep semantic matching, 
 
 ---
 
-## 🏗️ Architecture & Tech Stack
+##  Architecture & Tech Stack
 
 HireWise AI is built on a modern, serverless-ready stack:
 
@@ -71,7 +71,7 @@ flowchart LR
 
 ---
 
-## 🚀 Getting Started (Local Development)
+##  Getting Started (Local Development)
 
 ### Prerequisites
 - Node.js (v20+ recommended)
@@ -104,7 +104,7 @@ When `ENABLE_DEMO_MODE=true` is set, you can log in using the following accounts
 
 ---
 
-## 🐳 Docker Deployment
+##  Docker Deployment
 
 To run the application via Docker (with persistent volumes for the SQLite database and uploaded files):
 
@@ -115,7 +115,7 @@ The app will be available on `http://localhost:3000`.
 
 ---
 
-## 🌍 Production Deployment Guide
+##  Production Deployment Guide
 
 ### Vercel / Serverless Environments
 If deploying to Vercel, be aware that serverless filesystems are ephemeral. **SQLite and local file uploads are not suitable for Vercel production.**
@@ -129,7 +129,7 @@ The current SQLite + Local Uploads architecture works perfectly out-of-the-box o
 
 ---
 
-## 🎯 Testing the End-to-End Workflow
+##  Testing the End-to-End Workflow
 
 1. **Login:** Access the dashboard as `recruiter@hirewise.demo`.
 2. **Requisition Setup:** Create a new Job Requisition, defining the necessary skills and knockout criteria.
@@ -141,7 +141,7 @@ The current SQLite + Local Uploads architecture works perfectly out-of-the-box o
 
 ---
 
-## 🤝 Responsible AI Statement
+##  Responsible AI Statement
 HireWise AI is designed as a **Decision Support System**, not an automated hiring arbiter. 
 - It flags but does not strictly reject candidates without human review.
 - It actively monitors for and strips out sensitive/protected status keywords before semantic scoring.
@@ -154,7 +154,7 @@ HireWise AI is designed as a **Decision Support System**, not an automated hirin
 ### Landing Page
 The entry point of the application, highlighting our core value propositions: Production Workflows, Transparent AI Scoring, and Responsible AI Guardrails.
 
-![Landing Page](./screenshots/Screenshot%202026-05-15%20095711.jpg)
+![Landing Page](./screenshots/Screenshot%2026-05-15%095711.jpg)
 
 ### Role-Based Access
 Secure login with predefined demo credentials for Admin, Recruiter, Hiring Manager, and Viewer roles to test end-to-end workflows.
@@ -163,7 +163,7 @@ Secure login with predefined demo credentials for Admin, Recruiter, Hiring Manag
 
 ---
 
-## 📊 Dashboard & Analytics
+##  Dashboard & Analytics
 
 ### Talent OS Dashboard
 A high-level overview of active jobs, candidate funnels, and score distributions to keep recruiters informed at a glance.
@@ -177,7 +177,7 @@ Deep dive into application trends, shortlist conversion rates, and recruiter act
 
 ---
 
-## 🛠 Recruitment Workflow
+##  Recruitment Workflow
 
 ### 1. Job Requisition
 Define role scopes, mandatory "knockout" criteria, and specific skill requirements for AI evaluation.
@@ -201,7 +201,7 @@ A dedicated space for recruiters and hiring managers to collaborate on final can
 
 ---
 
-## 📄 Reporting & Compliance
+##  Reporting & Compliance
 
 ### Report Generation
 Export comprehensive, recruiter-friendly reports in PDF, JSON, or HTML formats, including methodology and ranking logic.
