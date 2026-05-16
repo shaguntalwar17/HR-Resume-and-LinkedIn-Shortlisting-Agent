@@ -88,15 +88,16 @@ flowchart LR
 ```
 
 
----
+```
 
-##  Getting Started (Local Development)
+## Getting Started (Local Development)
 
 ### Prerequisites
 - Node.js (v20+ recommended)
 - npm or yarn
 
 ### 1. Clone & Install
+
 ```bash
 git clone https://github.com/shaguntalwar17/HR-Resume-and-LinkedIn-Shortlisting-Agent.git
 cd hirewise-ai-shortlisting-agent
@@ -104,12 +105,15 @@ npm install
 ```
 
 ### 2. Environment Setup
+
 Copy the example environment variables file and customize it if needed.
+
 ```bash
 cp .env.example .env.local
 ```
 
 ### 3. Run the Development Server
+
 ```bash
 npm run dev
 ```
