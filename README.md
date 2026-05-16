@@ -158,8 +158,7 @@ HireWise AI is designed as a **Decision Support System**, not an automated hirin
 ### Landing Page
 The entry point of the application, highlighting our core value propositions: Production Workflows, Transparent AI Scoring, and Responsible AI Guardrails.
 
-![Landing Page](./screenshots/Screenshot%2026-05-15%043800.png)
-
+![Landing Page](./screenshots/Screenshot%202026-05-16%20235007.png)
 ### Role-Based Access
 Secure login with predefined demo credentials for Admin, Recruiter, Hiring Manager, and Viewer roles to test end-to-end workflows.
 
