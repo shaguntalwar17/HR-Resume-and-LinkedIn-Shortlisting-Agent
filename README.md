@@ -7,16 +7,16 @@
 [![Status](https://img.shields.io/badge/Status-Production_Ready-22c55e?style=for-the-badge)](#)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](#)
 
-**HireWise AI** is an advanced, production-ready HR tech platform designed to streamline the talent acquisition process. It acts as an intelligent shortlisting agent for recruiters, hiring managers, and HR teams, helping them rapidly evaluate candidates against Job Descriptions (JDs) using transparent, AI-assisted scoring rubrics.
+**HireWise AI** is an advanced HR tech platform designed to streamline the talent acquisition process. It acts as an intelligent shortlisting agent for recruiters, hiring managers and HR teams, helping them rapidly evaluate candidates against Job Descriptions (JDs) using transparent, AI-assisted scoring rubrics.
 
-By eliminating manual screening fatigue and introducing deep semantic matching, HireWise AI empowers teams to make faster, fairer, and highly auditable hiring decisions while keeping a "Human-in-the-Loop" for critical overrides.
+By eliminating manual screening fatigue and introducing deep semantic matching, HireWise AI empowers teams to make faster, fairer and highly auditable hiring decisions while keeping a "Human-in-the-Loop" for critical overrides.
 
 ---
 
 ##  Key Features & Capabilities
 
 ###  Enterprise-Grade Access & Security
-- **Role-Based Access Control (RBAC):** Distinct workflows for `ADMIN`, `RECRUITER`, `HIRING_MANAGER`, and `VIEWER`.
+- **Role-Based Access Control (RBAC):** Distinct workflows for `ADMIN`, `RECRUITER`, `HIRING_MANAGER` and `VIEWER`.
 - **Organization-Scoped Data:** Multi-tenant architecture ensuring isolated candidate and job data.
 - **Responsible AI Guardrails:** System strictly ignores protected attributes (gender, age, marital status, religion) to ensure bias-free screening.
 - **Full Audit Logging:** Every profile update, score override, and status change is immutably logged.
@@ -49,12 +49,27 @@ By eliminating manual screening fatigue and introducing deep semantic matching, 
 
 HireWise AI is built on a modern, serverless-ready stack:
 
-- **Frontend:** Next.js 16 (App Router), React, TypeScript, Tailwind CSS, shadcn/ui.
-- **Backend:** Next.js Route Handlers (Node.js runtime).
-- **Database:** Prisma ORM with SQLite (Easily swappable to PostgreSQL for enterprise deployments).
-- **Document Processing:** `pdf2json`, `mammoth`, `pdf-lib`.
-- **Validation & State:** Zod schema validation, React Hook Form, Zustand (for ephemeral state).
-- **Analytics:** Recharts.
+- **Core:** TypeScript, Node.js 20, Next.js `16.2.6` (App Router), React `19.2.4`, React DOM `19.2.4`.
+
+- **Frontend / UI:** Tailwind CSS v4, PostCSS (`@tailwindcss/postcss`), `class-variance-authority`, `clsx`, `tailwind-merge`, `framer-motion`, `lucide-react`, `sonner`, `recharts`, `date-fns`.
+
+- **Forms & Validation:** `react-hook-form`, `@hookform/resolvers`, `zod`.
+
+- **Backend / API:** Next.js Route Handlers (Node.js runtime), built-in `fetch` for AI API calls.
+
+- **Database & Data Layer:** Prisma ORM `6.19.0` (`prisma`, `@prisma/client`) with SQLite datasource (`prisma/schema.prisma`).
+
+- **Auth & Security:** `jose` (JWT), `bcryptjs` (password hashing).
+
+- **AI / LLM:** OpenAI-compatible API integration (`AI_BASE_URL`), `gpt-4o-mini` (`AI_MODEL`), `text-embedding-3-small` (`EMBEDDING_MODEL`), optional semantic embeddings pipeline.
+
+- **Document Processing:** `mammoth`, `pdf2json`, `pdf-parse`, `pdf-lib`, `jspdf`, `uuid`.
+
+- **Storage:** Local storage (`public/uploads`) with optional Vercel Blob support (`@vercel/blob`).
+
+- **DevOps / Deployment:** Docker (multi-stage `Dockerfile`), Docker Compose (`docker-compose.yml`).
+
+- **Developer Tooling:** ESLint v9, `eslint-config-next`, TypeScript v5, `tsx`, npm scripts for build/dev/lint and Prisma workflows.
 
 ### System Workflow
 ```mermaid
@@ -115,17 +130,6 @@ The app will be available on `http://localhost:3000`.
 
 ---
 
-##  Production Deployment Guide
-
-### Vercel / Serverless Environments
-If deploying to Vercel, be aware that serverless filesystems are ephemeral. **SQLite and local file uploads are not suitable for Vercel production.**
-To deploy on Vercel:
-1. Migrate the Prisma datasource from `sqlite` to `postgresql` and provide a managed DB connection string (e.g., Supabase, Neon).
-2. Configure a cloud blob storage provider (like `@vercel/blob` or AWS S3) for the `RESUME_STORAGE_PROVIDER`.
-3. Set `ENABLE_DEMO_MODE=false`.
-
-### VPS / Docker (Render, Railway, DigitalOcean)
-The current SQLite + Local Uploads architecture works perfectly out-of-the-box on any containerized hosting platform that supports **persistent disk volumes**.
 
 ---
 
