@@ -84,6 +84,10 @@ flowchart LR
   API --> STORAGE[(Resume Storage)]
 ```
 
+![Screenshot](./screenshots/Screenshot%202026-05-17%20000926.png)
+```
+
+
 ---
 
 ##  Getting Started (Local Development)
